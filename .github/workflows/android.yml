@@ -1,57 +1,88 @@
 name: Build Android APK
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
-  build-android:
-    name: Build Expo Android APK
+  build:
+    name: Build APK with EAS
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout source code
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      # 2. Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
-      # 3. Setup Java
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
         with:
-          distribution: temurin
-          java-version: '17'
-          cache: gradle
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
-      # 4. Install JavaScript dependencies
       - name: Install dependencies
         run: npm ci
 
-      # 5. Generate Android native project
-      - name: Expo Prebuild
-        run: npx expo prebuild --platform android --non-interactive
+      - name: Build APK on Expo EAS
+        run: |
+          eas build \
+            --platform android \
+            --profile preview \
+            --non-interactive \
+            --wait
 
-      # 6. Make Gradle wrapper executable
-      - name: Make Gradle executable
-        run: chmod +x android/gradlew
+      - name: Get latest APK build
+        id: get_build
+        run: |
+          eas build:list \
+            --platform android \
+            --profile preview \
+            --status finished \
+            --limit 1 \
+            --json > build.json
 
-      # 7. Build Debug APK
-      - name: Build APK
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+          cat build.json
 
-      # 8. Upload APK
-      - name: Upload APK
+          node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('build.json', 'utf8'));
+          const build = Array.isArray(data) ? data[0] : data.builds?.[0];
+
+          if (!build) {
+            console.error('No finished build found.');
+            process.exit(1);
+          }
+
+          if (!build.artifacts || !build.artifacts.buildUrl) {
+            console.error('APK download URL not found.');
+            console.error(JSON.stringify(build, null, 2));
+            process.exit(1);
+          }
+
+          fs.writeFileSync('build-url.txt', build.artifacts.buildUrl);
+          console.log('APK URL: ' + build.artifacts.buildUrl);
+          "
+
+      - name: Download APK
+        run: |
+          mkdir -p artifacts
+
+          APK_URL=$(cat build-url.txt)
+
+          echo "Downloading APK..."
+          curl -L "$APK_URL" -o artifacts/app.apk
+
+          echo "APK downloaded:"
+          ls -lh artifacts/app.apk
+
+      - name: Upload APK to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: artifacts/app.apk
           if-no-files-found: error
+          retention-days: 30
