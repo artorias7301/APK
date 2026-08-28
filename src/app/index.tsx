@@ -11,12 +11,12 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 
 function getDevMenuHint() {
   if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+    return <ThemedText type="small">welcome</ThemedText>;
   }
   if (Device.isDevice) {
     return (
       <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
+        shake device or press <ThemedText type="code">⠋m</ThemedText> in terminal
       </ThemedText>
     );
   }
@@ -96,3 +96,6 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.four,
   },
 });
+
+// // // // // // // // // // // // // // // // // // // // // // // // // // 
+
