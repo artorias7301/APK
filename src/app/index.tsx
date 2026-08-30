@@ -1,7 +1,8 @@
 import { View, TextInput, Pressable, Image, StyleSheet } from "react-native"
 import { useState } from "react";
+import { router } from "expo-router";
 
-function handelLogin() {};
+function handelLogin() {router.replace('/dashboard');};
 
 export default function LoginScreen() {
   const [focused, setFocused] = useState(false);
@@ -15,13 +16,13 @@ export default function LoginScreen() {
       <TextInput style={[styles.input, focused && styles.inputFocused]}
         onFocus={() => {setFocused(true)}}
         onBlur={() => {setFocused(false)}}
-        placeholder=":کد کشور👤"
+        placeholder="کد کشور را وارد کنید"
         placeholderTextColor="#39ff14"
         secureTextEntry />
 
       <Pressable style={({ pressed }) =>
         [styles.button, pressed && styles.buttonPressed,]}
-        onPress={() => { handelLogin }}>
+        onPress={handelLogin}>
         <Image style={styles.buttonImage}
           source={require('@/assets/images/LogButton.webp')}
           resizeMode="contain" />
@@ -56,11 +57,7 @@ const styles = StyleSheet.create({
   },
   inputFocused: {
     borderColor: '#39ff14',
-    borderWidth: 3,
-    shadowColor: '#39ff14',
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 20
+    borderWidth: 3
   },
   button: {
     width: 400,
