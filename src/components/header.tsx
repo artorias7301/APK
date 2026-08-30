@@ -101,6 +101,8 @@ const styles = StyleSheet.create({
 
     borderBottomWidth: 1,
     borderBottomColor: '#102010',
+
+    zIndex: 9999,
   },
 
   menuButton: {
