@@ -1,168 +1,104 @@
-import { View, Image, Pressable, Text, StyleSheet } from "react-native";
-import { Menu, X, Wallet, Droplets, Users, Swords, Factory, Settings } from 'lucide-react-native';
-import { Href, router } from "expo-router";
-import { useState } from "react";
+import { View, Pressable, Text, StyleSheet } from "react-native";
 
-function MenuItem({
-  icon,
-  title,
-  onPress,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  onPress: () => void;
-}) {
+const COLORS = {
+  green: '#39FF14',
+  grayLight: '#A0A0A0'
+};
+
+export const Header = () => {
   return (
-    <Pressable
-      style={styles.menuItem}
-      onPress={onPress}
-    >
-      {icon}
+    <View style={styles.header}>
+      <View style={styles.headerLeft}>
+        <Pressable style={styles.menuButton}>
+          <View style={styles.menuLine} />
+          <View style={styles.menuLine} />
+          <View style={styles.menuLine} />
+        </Pressable>
 
-      <Text style={styles.menuText}>
-        {title}
-      </Text>
-    </Pressable>
-  );
-}
+        <View>
+          <Text style={styles.logo}>WAR ZONE</Text>
+          <Text style={styles.logoSubtitle}>
+            STRATEGY // POWER // CONTROL
+          </Text>
+        </View>
+      </View>
 
-export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const Path_Handler = (path: Href) => {
-    setMenuOpen(false);
-    router.push(path);
-  };
-  return (
-    <View style={styles.container}>
-
-      <Pressable onPress={() => Path_Handler('/')}>
-        <Settings size={30} color="#37ff14e2" />
-      </Pressable>
-
-      <Image style={styles.logoImage}
-        source={require('@/assets/images/logo.png')}
-        resizeMode="contain" />
-
-      <Pressable style={styles.menuButton}
-        onPress={() => setMenuOpen(!menuOpen)}>
-        {menuOpen ? (<X size={30} color="#37ff14e2" />) : (<Menu size={30} color="#37ff14e2" />)}
-      </Pressable>
-
-      {menuOpen && (
-         <View style={styles.menu}>
-
-           <MenuItem
-              icon={<Wallet size={21} color="#39FF14" />}
-              title="داشبورد"
-              onPress={() => Path_Handler('/dashboard')}
-           />
-
-           <MenuItem
-             icon={<Swords size={21} color="#39FF14" />}
-             title="ارتش"
-             onPress={() => Path_Handler('/')}
-           />
-
-           <MenuItem
-             icon={<Droplets size={21} color="#39FF14" />}
-             title="منابع"
-             onPress={() => Path_Handler('/')}
-           />
-
-           <MenuItem
-             icon={<Factory size={21} color="#39FF14" />}
-             title="تولیدات"
-             onPress={() => Path_Handler('/')}
-           />
-
-           <MenuItem
-             icon={<Users size={21} color="#39FF14" />}
-             title="محبوبیت"
-             onPress={() => Path_Handler('/')}
-           />
-
-
-         </View>
-       )}
+      <View style={styles.headerRight}>
+        <Text style={styles.dayText}>DAY 127</Text>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    height: 70,
-    backgroundColor: '#030503',
-
+  header: {
+    minHeight: 72,
+    marginHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#183F16',
+    borderRadius: 16,
+    backgroundColor: '#020602',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
 
-    paddingHorizontal: 16,
+    shadowColor: COLORS.green,
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 4,
+  },
 
-    borderBottomWidth: 1,
-    borderBottomColor: '#102010',
-
-    zIndex: 9999,
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
   },
 
   menuButton: {
-    width: 40,
-    height: 40,
-
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    backgroundColor: '#071007',
-  },
-
-  logoImage: {
-    width: '70%',
-    height: '100%',
-    
-  },
-  
-  menu: {
-    position: 'absolute',
-
-    alignItems: 'flex-end',
-
-    top: 75,
-    right: 16,
-
-    width: 200,
-
-    padding: 10,
-
-    backgroundColor: '#050805',
-
+    width: 42,
+    height: 42,
+    borderRadius: 11,
     borderWidth: 1,
-    borderColor: '#1d5c1d',
-    borderRadius: 12,
-
-    zIndex: 999,
-    elevation: 20,
-  },
-
-  menuItem: {
-    height: 50,
-
-    flexDirection: 'row-reverse',
+    borderColor: '#20521A',
+    backgroundColor: '#071007',
+    justifyContent: 'center',
     alignItems: 'center',
-
-    paddingHorizontal: 14,
-
-    gap: 14,
-
-    borderRadius: 8,
+    marginRight: 10,
   },
 
-  menuText: {
-    color: '#ddd',
-    fontSize: 14,
-    fontWeight: '600',
+  menuLine: {
+    width: 20,
+    height: 2,
+    backgroundColor: COLORS.green,
+    marginVertical: 2.5,
+    borderRadius: 2,
   },
 
+  logo: {
+    color: COLORS.green,
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
+
+  logoSubtitle: {
+    color: '#657060',
+    fontSize: 7.5,
+    letterSpacing: 1.1,
+    marginTop: 2,
+  },
+
+  headerRight: {
+    alignItems: 'flex-end',
+    marginLeft: 8,
+  },
+
+  dayText: {
+    color: COLORS.green,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
 });
-
-
-
