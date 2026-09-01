@@ -70,15 +70,15 @@ export const Footer = () => {
     },
     {
       label: 'فروشگاه',
-      icon: 'target',
+      icon: 'cart-outline',
       active: false,
       path: '/shop'
     },
     {
-      label: 'اخبار',
-      icon: 'cog-outline',
+      label: 'لیدربرد',
+      icon: 'trophy-outline',
       active: false,
-      path: '/dashboard'
+      path: '/leaderboard'
     },
   ];
 
