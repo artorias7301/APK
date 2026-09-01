@@ -4,43 +4,43 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 
 const { width } = Dimensions.get("window");
-
+const COLORS = {green: '#39FF14'};
 const stats = [
   {
     title: "خزانه",
     value: "₽ 2,450,000",
     icon: "wallet",
-    color: "#00ff88",
+    color: COLORS.green,
   },
   {
     title: "درآمد روزانه",
     value: "₽ 125,000",
     icon: "trending-up",
-    color: "#00ff88",
+    color: COLORS.green,
   },
   {
     title: "رضایت مردم",
     value: "78%",
     icon: "people",
-    color: "#00ff88",
+    color: COLORS.green,
   },
   {
     title: "مالیات روزانه",
     value: "₽ 84,500",
     icon: "cash",
-    color: "#00ff88",
+    color: COLORS.green,
   },
   {
     title: "نفت",
     value: "1,280,000 بشکه",
     icon: "flame",
-    color: "#00ff88",
+    color: COLORS.green,
   },
   {
     title: "استخراج روزانه",
     value: "42,000 بشکه",
     icon: "construct",
-    color: "#00ff88",
+    color: COLORS.green,
   },
 ];
 
@@ -80,7 +80,7 @@ function StatCard({ item }: any) {
     <View style={styles.statCard}>
       <View style={styles.statTop}>
         <View style={styles.iconBox}>
-          <Ionicons name={item.icon} size={21} color="#00ff88" />
+          <Ionicons name={item.icon} size={21} color='#39FF14' />
         </View>
 
         <Text style={styles.statTitle}>{item.title}</Text>
@@ -136,9 +136,6 @@ function MoneyChart() {
   );
 }
 
-const COLORS = {
-  green: '#39FF14',
-};
 
 const PageTitle = () => {
   return (
@@ -196,7 +193,7 @@ export default function Dashbord() {
               <Ionicons
                 name="shield-checkmark"
                 size={26}
-                color="#00ff88"
+                color='#39FF14'
               />
             </View>
           </View>
@@ -230,7 +227,7 @@ export default function Dashbord() {
               <Ionicons
                 name="arrow-up"
                 size={15}
-                color="#00ff88"
+                color='#39FF14'
               />
               <Text style={styles.growthText}>+14.8%</Text>
             </View>
@@ -257,7 +254,7 @@ export default function Dashbord() {
             <View key={index}
               style={[styles.event, index !== events.length - 1 && styles.eventBorder,]}>
               <View style={styles.eventIcon}>
-                <Ionicons name={event.icon} size={20} color="#00ff88"/>
+                <Ionicons name={event.icon} size={20} color='#39FF14'/>
               </View>
 
               <View style={styles.eventContent}>
@@ -279,7 +276,7 @@ export default function Dashbord() {
           <Ionicons
             name="radio"
             size={14}
-            color="#00ff88"
+            color='#39FF14'
           />
           <Text style={styles.footerText}>
             SYSTEM STATUS: STABLE
@@ -367,7 +364,7 @@ const styles = StyleSheet.create({
   },
 
   smallHeader: {
-    color: "#00ff88",
+    color: COLORS.green,
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 2,
@@ -390,11 +387,11 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 10,
-    backgroundColor: "#00ff88",
+    backgroundColor: COLORS.green,
   },
 
   onlineText: {
-    color: "#00ff88",
+    color: COLORS.green,
     fontSize: 9,
     fontWeight: "800",
   },
@@ -458,7 +455,7 @@ const styles = StyleSheet.create({
     width: 4,
     height: 19,
     borderRadius: 4,
-    backgroundColor: "#00ff88",
+    backgroundColor: COLORS.green,
   },
 
   sectionTitle: {
@@ -489,7 +486,7 @@ const styles = StyleSheet.create({
   },
 
   statusValue: {
-    color: "#00ff88",
+    color: COLORS.green,
     fontSize: 21,
     fontWeight: "900",
     marginTop: 4,
@@ -518,7 +515,7 @@ const styles = StyleSheet.create({
   progress: {
     width: "82%",
     height: "100%",
-    backgroundColor: "#00ff88",
+    backgroundColor: COLORS.green,
     borderRadius: 10,
   },
 
@@ -534,7 +531,7 @@ const styles = StyleSheet.create({
   },
 
   detailPercent: {
-    color: "#00ff88",
+    color: COLORS.green,
     fontSize: 11,
     fontWeight: "800",
   },
@@ -596,7 +593,7 @@ const styles = StyleSheet.create({
   },
 
   growthText: {
-    color: "#00ff88",
+    color: COLORS.green,
     fontSize: 11,
     fontWeight: "800",
   },
@@ -643,7 +640,7 @@ const styles = StyleSheet.create({
 
   bar: {
     width: Math.max(4, (width - 100) / 30),
-    backgroundColor: "#00ff88",
+    backgroundColor: COLORS.green,
     borderTopLeftRadius: 3,
     borderTopRightRadius: 3,
     opacity: 0.8,
@@ -706,7 +703,7 @@ const styles = StyleSheet.create({
   },
 
   eventTime: {
-    color: "#00ff88",
+    color: COLORS.green,
     fontSize: 9,
     fontWeight: "700",
   },

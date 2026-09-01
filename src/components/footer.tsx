@@ -52,19 +52,19 @@ export const Footer = () => {
   const tabs: tabs[] = [
     {
       label: 'ماموریت ها',
-      icon: 'home-outline',
+      icon: 'target',
       active: false,
-      path: '/dashboard'
+      path: '/messions'
     },
     {
       label: 'تجهیزات',
-      icon: 'flag-outline',
+      icon: 'shield-outline',
       active: false,
       path: '/equipment'
     },
     {
       label: 'داشبورد',
-      icon: 'shield-outline',
+      icon: 'flag-outline',
       active: true,
       path: '/dashboard'
     },
