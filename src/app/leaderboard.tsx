@@ -1,13 +1,11 @@
 import React from 'react';
-import { ScrollView, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 
-/* =========================================================
-   TYPES
-========================================================= */
-
+/* TYPES */
 type IconName = React.ComponentProps<
   typeof MaterialCommunityIcons
 >['name'];
@@ -31,16 +29,10 @@ interface RankingCategory {
   playerValue: string;
 }
 
-/* =========================================================
-   PLAYER
-========================================================= */
-
+/* PLAYER */
 const playerCountry = 'ایران';
 
-/* =========================================================
-   RANKING DATA
-========================================================= */
-
+/* RANKING DATA */
 const rankingCategories: RankingCategory[] = [
   {
     id: 'wealth',
@@ -607,18 +599,9 @@ const rankingCategories: RankingCategory[] = [
   },
 ];
 
-/* =========================================================
-   PAGE TITLE
-========================================================= */
-
+/* PAGE TITLE */
 const COLORS = {
-  black: '#000000',
-  panel: '#071007',
-  green: '#39FF14',
-  white: '#F5FFF3',
-  gray: '#777777',
-  grayLight: '#A0A0A0',
-  orange: '#FFB020',
+  green: '#00ff88',
 };
 
 const PageTitle = () => {
@@ -642,10 +625,7 @@ const PageTitle = () => {
   );
 };
 
-/* =========================================================
-   PLAYER RANK CARD
-========================================================= */
-
+/* PLAYER RANK CARD */
 function PlayerRankCard() {
   return (
     <View style={styles.playerRankCard}>
@@ -653,7 +633,7 @@ function PlayerRankCard() {
         <MaterialCommunityIcons
           name="crown"
           size={29}
-          color="#39FF14"
+          color='#00ff88'
         />
       </View>
 
@@ -684,10 +664,7 @@ function PlayerRankCard() {
   );
 }
 
-/* =========================================================
-   RANKING CARD
-========================================================= */
-
+/* RANKING CARD */
 interface RankingCardProps {
   category: RankingCategory;
 }
@@ -706,7 +683,7 @@ function RankingCard({
           <MaterialCommunityIcons
             name={category.icon}
             size={23}
-            color="#39FF14"
+            color='#00ff88'
           />
         </View>
 
@@ -761,7 +738,7 @@ function RankingCard({
                   <MaterialCommunityIcons
                     name="medal"
                     size={20}
-                    color="#39FF14"
+                    color='#00ff88'
                   />
                 ) : (
                   <Text
@@ -836,7 +813,7 @@ function RankingCard({
           <MaterialCommunityIcons
             name="account"
             size={17}
-            color="#39FF14"
+            color='#00ff88'
           />
         </View>
 
@@ -872,7 +849,7 @@ function RankingCard({
 
 export default function LeaderBoard() {
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <Header />
       <ScrollView
         style={styles.scrollView}
@@ -887,7 +864,7 @@ export default function LeaderBoard() {
           <MaterialCommunityIcons
             name="earth"
             size={17}
-            color="#39FF14"
+            color='#00ff88'
           />
 
           <Text style={styles.globalStatusText}>
@@ -912,14 +889,11 @@ export default function LeaderBoard() {
 
       </ScrollView>
       <Footer />
-    </View>
+    </SafeAreaView>
   );
 }
 
-/* =========================================================
-   STYLES
-========================================================= */
-
+/* STYLES */
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -955,7 +929,7 @@ const styles = StyleSheet.create({
   },
 
   pageTitle: {
-    color: COLORS.green,
+    color: '#00ff88',
     fontSize: 26,
     fontWeight: '900',
     textAlign: 'center',
@@ -992,7 +966,7 @@ const styles = StyleSheet.create({
   titleDiamond: {
     width: 6,
     height: 6,
-    backgroundColor: COLORS.green,
+    backgroundColor: '#00ff88',
     transform: [{ rotate: '45deg' }],
     marginHorizontal: 8,
   },  
@@ -1020,7 +994,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 13,
 
-    shadowColor: '#39FF14',
+    shadowColor: '#00ff88',
 
     shadowOpacity: 0.16,
 
@@ -1059,7 +1033,7 @@ const styles = StyleSheet.create({
   },
 
   playerRankLabel: {
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontSize: 11,
 
@@ -1117,13 +1091,13 @@ const styles = StyleSheet.create({
   playerRankNumber: {
     marginTop: 1,
 
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontSize: 25,
 
     fontWeight: '900',
 
-    textShadowColor: '#39FF14',
+    textShadowColor: '#00ff88',
 
     textShadowOffset: {
       width: 0,
@@ -1177,13 +1151,13 @@ const styles = StyleSheet.create({
 
     borderRadius: 3,
 
-    backgroundColor: '#39FF14',
+    backgroundColor: '#00ff88',
   },
 
   liveText: {
     marginLeft: 4,
 
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontSize: 7,
 
@@ -1209,7 +1183,7 @@ const styles = StyleSheet.create({
 
     borderRadius: 13,
 
-    shadowColor: '#39FF14',
+    shadowColor: '#00ff88',
 
     shadowOpacity: 0.06,
 
@@ -1392,7 +1366,7 @@ const styles = StyleSheet.create({
   },
 
   playerCountryName: {
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontWeight: '900',
   },
@@ -1414,7 +1388,7 @@ const styles = StyleSheet.create({
   },
 
   youBadgeText: {
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontSize: 7,
 
@@ -1444,7 +1418,7 @@ const styles = StyleSheet.create({
   },
 
   playerValue: {
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontWeight: '900',
   },
@@ -1516,7 +1490,7 @@ const styles = StyleSheet.create({
   playerPositionValue: {
     marginTop: 1,
 
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontSize: 14,
 
@@ -1534,7 +1508,7 @@ const styles = StyleSheet.create({
   },
 
   playerScoreValue: {
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontSize: 13,
 

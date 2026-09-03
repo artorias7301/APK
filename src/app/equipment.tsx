@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import {Dimensions, FlatList, ScrollView, Pressable, StyleSheet, Text, View, useWindowDimensions} from 'react-native';
+import { Dimensions, FlatList, ScrollView, Pressable, StyleSheet, Text, View, useWindowDimensions} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {Ionicons,MaterialCommunityIcons} from '@expo/vector-icons';
 import { Header } from '@/components/header';
@@ -95,7 +95,7 @@ type EquipmentIconName =
 const COLORS = {
   black: '#000000',
   panel: '#071007',
-  green: '#39FF14',
+  green: '#00ff88',
   white: '#F5FFF3',
   gray: '#777777',
   grayLight: '#A0A0A0',
@@ -902,69 +902,11 @@ const EquipmentCard = ({
         </View>
 
         <View style={styles.levelBox}>
-          <Text style={styles.levelLabel}>سطح</Text>
+          <Text style={styles.levelLabel}>تعداد</Text>
           <Text style={styles.levelValue}>
-            Lv.{item.level}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.equipmentStats}>
-        <View style={styles.miniStat}>
-          <Text style={styles.miniStatLabel}>تعداد</Text>
-          <Text style={styles.miniStatValue}>
             {formatNumber(item.quantity)}
           </Text>
         </View>
-
-        <View style={styles.miniStat}>
-          <Text style={styles.miniStatLabel}>آمادگی</Text>
-          <Text style={styles.miniStatValue}>
-            {item.readiness}%
-          </Text>
-        </View>
-
-        <View style={styles.miniStat}>
-          <Text style={styles.miniStatLabel}>قدرت</Text>
-          <Text style={styles.miniStatValue}>
-            +{formatNumber(item.power)}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.equipmentBottom}>
-        <View style={styles.expContainer}>
-          <View style={styles.expHeader}>
-            <Text style={styles.expText}>EXP</Text>
-            <Text style={styles.expNumbers}>
-              {item.exp} / {item.expRequired}
-            </Text>
-          </View>
-
-          <View style={styles.expTrack}>
-            <View
-              style={[
-                styles.expFill,
-                { width: `${expPercent}%` },
-              ]}
-            />
-          </View>
-        </View>
-
-        <Pressable
-          onPress={() => onUpgrade(item.id)}
-          style={({ pressed }) => [
-            styles.upgradeButton,
-            pressed && styles.upgradeButtonPressed,
-          ]}
-        >
-          <MaterialCommunityIcons
-            name="arrow-up-bold"
-            size={15}
-            color={COLORS.green}
-          />
-          <Text style={styles.upgradeText}>ارتقا</Text>
-        </Pressable>
       </View>
     </View>
   );
@@ -1094,7 +1036,7 @@ export default function EquipmentManagementScreen() {
   };
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       <Header />
       <SafeAreaView
         style={[
@@ -1152,7 +1094,7 @@ export default function EquipmentManagementScreen() {
         </View>
       </SafeAreaView>
       <Footer />
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -1,537 +1,741 @@
-import {MaterialCommunityIcons, Ionicons} from "@expo/vector-icons";
-import {useCallback,useMemo,useState,} from "react";
-import {FlatList,SafeAreaView,StatusBar, ScrollView} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useEffect, useRef } from "react";
-import {Animated, Dimensions, Pressable, StyleSheet, Text, View} from "react-native";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
+import { useMemo, useRef, useState } from 'react';
+import { Dimensions, FlatList, ScrollView, Pressable, StyleSheet, Text, View, useWindowDimensions} from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import {Ionicons,MaterialCommunityIcons} from '@expo/vector-icons';
+import { Header } from '@/components/header';
+import { Footer } from '@/components/footer';
 
-type IconFamily = "MaterialCommunityIcons" | "Ionicons";
-interface ShopCategory {
-  id: string;
+/* TYPES */
+type IconLibrary = 'ion' | 'mci';
+interface IconConfig {
   name: string;
-  icon: string;
-  iconFamily: IconFamily;
-}
+  library?: IconLibrary;
+};
 
-interface ShopItem {
+interface Equipment {
   id: string;
   name: string;
   description: string;
-  cost: number;
-  benefit: string;
+  quantity: number;
+  readiness: number;
+  power: number;
+  level: number;
+  exp: number;
+  expRequired: number;
   icon: string;
-  iconFamily: IconFamily;
-  color?: string;
-  upgradeable?: boolean;
-}
+};
 
-const shopCategories: ShopCategory[] = [
+interface EquipmentCategory {
+  id: string;
+  name: string;
+  icon: IconConfig;
+  equipment: Equipment[];
+};
+
+interface CountryStats {
+  money: number;
+  satisfaction: number;
+  militaryPower: number;
+  combatReadiness: number;
+};
+
+type EquipmentIconName =
+  | 'tank'
+  | 'apc'
+  | 'artillery'
+  | 'rocket'
+  | 'antiTank'
+  | 'engineering'
+  | 'ballistic'
+  | 'cruise'
+  | 'tactical'
+  | 'launcher'
+  | 'fighter'
+  | 'bomber'
+  | 'drone'
+  | 'transportAircraft'
+  | 'helicopter'
+  | 'reconAircraft'
+  | 'destroyer'
+  | 'frigate'
+  | 'submarine'
+  | 'carrier'
+  | 'patrol'
+  | 'supplyShip'
+  | 'airDefense'
+  | 'radar'
+  | 'interceptor'
+  | 'sam'
+  | 'antiDrone'
+  | 'earlyWarning'
+  | 'infantry'
+  | 'specialForces'
+  | 'mechanized'
+  | 'sniper'
+  | 'medic'
+  | 'recon'
+  | 'cyber'
+  | 'server'
+  | 'intel'
+  | 'signal'
+  | 'satellite'
+  | 'electronic'
+  | 'specialWeapon'
+  | 'laser'
+  | 'emp'
+  | 'strategic'
+  | 'command'
+  | 'fuel'
+  | 'transport'
+  | 'repair'
+  | 'warehouse'
+  | 'logistics';
+
+/* CONSTANTS */
+const COLORS = {
+  black: '#000000',
+  panel: '#071007',
+  green: '#00ff88',
+  white: '#F5FFF3',
+  gray: '#777777',
+  grayLight: '#A0A0A0',
+  orange: '#FFB020',
+};
+
+const initialCountryStats: CountryStats = {
+  money: 12450000,
+  satisfaction: 72,
+  militaryPower: 72450,
+  combatReadiness: 84,
+};
+
+/* HELPERS */
+const formatNumber = (value: number) =>new Intl.NumberFormat('en-US').format(value);
+const getEquipmentIcon = (
+  icon: EquipmentIconName,
+): { library: IconLibrary; name: string } => {
+  const map: Record<EquipmentIconName, { library: IconLibrary; name: string }> =
+    {
+      tank: { library: 'mci', name: 'tank' },
+      apc: { library: 'mci', name: 'arm-flex' },
+      artillery: { library: 'mci', name: 'cannon' },
+      rocket: { library: 'mci', name: 'rocket-launch' },
+      antiTank: { library: 'mci', name: 'target' },
+      engineering: { library: 'mci', name: 'excavator' },
+
+      ballistic: { library: 'mci', name: 'rocket-launch-outline' },
+      cruise: { library: 'mci', name: 'rocket' },
+      tactical: { library: 'mci', name: 'crosshairs-gps' },
+      launcher: { library: 'mci', name: 'missile' },
+
+      fighter: { library: 'mci', name: 'airplane' },
+      bomber: { library: 'mci', name: 'airplane-takeoff' },
+      drone: { library: 'mci', name: 'drone' },
+      transportAircraft: { library: 'mci', name: 'airplane' },
+      helicopter: { library: 'mci', name: 'helicopter' },
+      reconAircraft: { library: 'mci', name: 'radar' },
+
+      destroyer: { library: 'mci', name: 'ferry' },
+      frigate: { library: 'mci', name: 'sail-boat' },
+      submarine: { library: 'mci', name: 'submarine' },
+      carrier: { library: 'mci', name: 'ferry' },
+      patrol: { library: 'mci', name: 'speedometer' },
+      supplyShip: { library: 'mci', name: 'ship-wheel' },
+
+      airDefense: { library: 'mci', name: 'shield-airplane' },
+      radar: { library: 'mci', name: 'radar' },
+      interceptor: { library: 'mci', name: 'target' },
+      sam: { library: 'mci', name: 'shield-check' },
+      antiDrone: { library: 'mci', name: 'drone' },
+      earlyWarning: { library: 'mci', name: 'radar' },
+
+      infantry: { library: 'mci', name: 'account-group' },
+      specialForces: { library: 'mci', name: 'account-tie' },
+      mechanized: { library: 'mci', name: 'truck' },
+      sniper: { library: 'mci', name: 'crosshairs' },
+      medic: { library: 'mci', name: 'medical-bag' },
+      recon: { library: 'mci', name: 'binoculars' },
+
+      cyber: { library: 'mci', name: 'laptop' },
+      server: { library: 'mci', name: 'server' },
+      intel: { library: 'mci', name: 'database-search' },
+      signal: { library: 'mci', name: 'signal-cellular-3' },
+      satellite: { library: 'mci', name: 'satellite-variant' },
+      electronic: { library: 'mci', name: 'access-point' },
+
+      specialWeapon: { library: 'mci', name: 'atom' },
+      laser: { library: 'mci', name: 'laser-pointer' },
+      emp: { library: 'mci', name: 'flash' },
+      strategic: { library: 'mci', name: 'nuke' },
+      command: { library: 'mci', name: 'target-account' },
+
+      fuel: { library: 'mci', name: 'fuel' },
+      transport: { library: 'mci', name: 'truck-fast' },
+      repair: { library: 'mci', name: 'wrench' },
+      warehouse: { library: 'mci', name: 'warehouse' },
+      logistics: { library: 'mci', name: 'package-variant-closed' },
+    };
+
+  return map[icon];
+};
+
+/* MOCK DATA */
+const shopCategories: EquipmentCategory[] = [
   {
-    id: "income",
-    name: "منابع درآمد",
-    icon: "cash-multiple",
-    iconFamily: "MaterialCommunityIcons",
+    id: 'missiles',
+    name: 'تسلیحات موشکی',
+    icon: { library: 'mci', name: 'rocket-launch' },
+    equipment: [
+      {
+        id: 'ballistic',
+        name: 'موشک بالستیک',
+        description: 'موشک برد بلند با قدرت تخریب بالا',
+        quantity: 42,
+        readiness: 88,
+        power: 18400,
+        level: 3,
+        exp: 720,
+        expRequired: 1400,
+        icon: 'ballistic',
+      },
+      {
+        id: 'cruise',
+        name: 'موشک کروز',
+        description: 'حمله دقیق به اهداف استراتژیک',
+        quantity: 76,
+        readiness: 91,
+        power: 12600,
+        level: 3,
+        exp: 540,
+        expRequired: 1200,
+        icon: 'cruise',
+      },
+      {
+        id: 'tactical',
+        name: 'موشک تاکتیکی',
+        description: 'پشتیبانی سریع از نیروهای زمینی',
+        quantity: 128,
+        readiness: 84,
+        power: 8300,
+        level: 2,
+        exp: 390,
+        expRequired: 800,
+        icon: 'tactical',
+      },
+      {
+        id: 'launcher',
+        name: 'پرتابگر متحرک',
+        description: 'افزایش تحرک و انعطاف سامانه موشکی',
+        quantity: 36,
+        readiness: 79,
+        power: 7200,
+        level: 2,
+        exp: 280,
+        expRequired: 800,
+        icon: 'launcher',
+      },
+    ],
   },
   {
-    id: "missiles",
-    name: "تسلیحات موشکی",
-    icon: "rocket-launch",
-    iconFamily: "MaterialCommunityIcons",
+    id: 'air',
+    name: 'نیروی هوایی',
+    icon: { library: 'mci', name: 'airplane' },
+    equipment: [
+      {
+        id: 'fighter',
+        name: 'جنگنده چندمنظوره',
+        description: 'جنگنده سریع برای عملیات هوایی',
+        quantity: 64,
+        readiness: 92,
+        power: 19400,
+        level: 4,
+        exp: 900,
+        expRequired: 1600,
+        icon: 'fighter',
+      },
+      {
+        id: 'bomber',
+        name: 'هواپیمای بمب‌افکن',
+        description: 'حمل مهمات سنگین در عملیات راهبردی',
+        quantity: 18,
+        readiness: 81,
+        power: 15200,
+        level: 3,
+        exp: 630,
+        expRequired: 1200,
+        icon: 'bomber',
+      },
+      {
+        id: 'drone',
+        name: 'پهپاد رزمی',
+        description: 'عملیات شناسایی و حمله بدون سرنشین',
+        quantity: 137,
+        readiness: 95,
+        power: 6800,
+        level: 3,
+        exp: 740,
+        expRequired: 1400,
+        icon: 'drone',
+      },
+      {
+        id: 'helicopter',
+        name: 'بالگرد تهاجمی',
+        description: 'پشتیبانی نزدیک از نیروهای زمینی',
+        quantity: 31,
+        readiness: 86,
+        power: 9100,
+        level: 2,
+        exp: 450,
+        expRequired: 800,
+        icon: 'helicopter',
+      },
+    ],
   },
   {
-    id: "aircraft",
-    name: "جنگنده های هوایی",
-    icon: "airplane",
-    iconFamily: "MaterialCommunityIcons",
+    id: 'navy',
+    name: 'ناوگان دریایی',
+    icon: { library: 'mci', name: 'ferry' },
+    equipment: [
+      {
+        id: 'destroyer',
+        name: 'ناوشکن',
+        description: 'کشتی رزمی چندمنظوره',
+        quantity: 8,
+        readiness: 84,
+        power: 17200,
+        level: 3,
+        exp: 620,
+        expRequired: 1200,
+        icon: 'destroyer',
+      },
+      {
+        id: 'frigate',
+        name: 'ناوچه رزمی',
+        description: 'دفاع و گشت دریایی',
+        quantity: 17,
+        readiness: 89,
+        power: 8300,
+        level: 2,
+        exp: 360,
+        expRequired: 800,
+        icon: 'frigate',
+      },
+      {
+        id: 'submarine',
+        name: 'زیردریایی',
+        description: 'عملیات مخفیانه در عمق آب',
+        quantity: 6,
+        readiness: 76,
+        power: 14600,
+        level: 3,
+        exp: 410,
+        expRequired: 1200,
+        icon: 'submarine',
+      },
+      {
+        id: 'patrol',
+        name: 'شناور گشتی',
+        description: 'کنترل و حفاظت از آب‌های سرزمینی',
+        quantity: 29,
+        readiness: 94,
+        power: 3600,
+        level: 2,
+        exp: 510,
+        expRequired: 800,
+        icon: 'patrol',
+      },
+    ],
   },
   {
-    id: "navy",
-    name: "ناوگان دریایی",
-    icon: "ferry",
-    iconFamily: "MaterialCommunityIcons",
+    id: 'airDefense',
+    name: 'پدافند هوایی',
+    icon: { library: 'mci', name: 'shield-airplane' },
+    equipment: [
+      {
+        id: 'sam',
+        name: 'سامانه موشکی پدافند',
+        description: 'رهگیری اهداف هوایی دشمن',
+        quantity: 28,
+        readiness: 94,
+        power: 11900,
+        level: 3,
+        exp: 810,
+        expRequired: 1400,
+        icon: 'sam',
+      },
+      {
+        id: 'radar',
+        name: 'رادار برد بلند',
+        description: 'کشف اهداف هوایی در فواصل دور',
+        quantity: 14,
+        readiness: 91,
+        power: 7600,
+        level: 3,
+        exp: 560,
+        expRequired: 1200,
+        icon: 'radar',
+      },
+      {
+        id: 'interceptor',
+        name: 'سامانه رهگیر',
+        description: 'واکنش سریع به تهدیدات هوایی',
+        quantity: 19,
+        readiness: 87,
+        power: 9800,
+        level: 2,
+        exp: 390,
+        expRequired: 800,
+        icon: 'interceptor',
+      },
+      {
+        id: 'antiDrone',
+        name: 'ضد پهپاد',
+        description: 'شناسایی و انهدام پهپادها',
+        quantity: 46,
+        readiness: 93,
+        power: 4200,
+        level: 2,
+        exp: 510,
+        expRequired: 800,
+        icon: 'antiDrone',
+      },
+    ],
   },
   {
-    id: "defense",
-    name: "سامانه پدافندی",
-    icon: "shield-check",
-    iconFamily: "MaterialCommunityIcons",
+    id: 'ground',
+    name: 'تجهیزات زمینی',
+    icon: { library: 'mci', name: 'tank' },
+    equipment: [
+      {
+        id: 'tank',
+        name: 'تانک اصلی نبرد',
+        description: 'تانک سنگین با قدرت آتش و زره بالا',
+        quantity: 248,
+        readiness: 91,
+        power: 12400,
+        level: 3,
+        exp: 650,
+        expRequired: 1200,
+        icon: 'tank',
+      },
+      {
+        id: 'apc',
+        name: 'نفربر زرهی',
+        description: 'انتقال نیرو با حفاظت بالا',
+        quantity: 516,
+        readiness: 87,
+        power: 8200,
+        level: 2,
+        exp: 320,
+        expRequired: 800,
+        icon: 'apc',
+      },
+      {
+        id: 'artillery',
+        name: 'توپخانه خودکششی',
+        description: 'پشتیبانی آتش از فواصل دور',
+        quantity: 184,
+        readiness: 79,
+        power: 6750,
+        level: 2,
+        exp: 210,
+        expRequired: 800,
+        icon: 'artillery',
+      },
+      {
+        id: 'rocket',
+        name: 'سامانه راکت‌انداز',
+        description: 'حملات گسترده با راکت‌های چندگانه',
+        quantity: 96,
+        readiness: 76,
+        power: 5300,
+        level: 1,
+        exp: 120,
+        expRequired: 400,
+        icon: 'rocket',
+      },
+      {
+        id: 'antiTank',
+        name: 'سامانه ضد تانک',
+        description: 'مقابله با تانک‌های دشمن',
+        quantity: 132,
+        readiness: 83,
+        power: 4800,
+        level: 2,
+        exp: 410,
+        expRequired: 800,
+        icon: 'antiTank',
+      },
+      {
+        id: 'engineering',
+        name: 'خودرو مهندسی',
+        description: 'ساخت و تخریب موانع و استحکامات',
+        quantity: 64,
+        readiness: 68,
+        power: 2100,
+        level: 1,
+        exp: 80,
+        expRequired: 400,
+        icon: 'engineering',
+      },
+    ],
   },
   {
-    id: "ground",
-    name: "تجهیزات زمینی",
-    icon: "tank",
-    iconFamily: "MaterialCommunityIcons",
+    id: 'infantry',
+    name: 'پیاده نظام',
+    icon: { library: 'mci', name: 'account-group' },
+    equipment: [
+      {
+        id: 'infantry',
+        name: 'یگان پیاده نظام',
+        description: 'نیروی پایه عملیات زمینی',
+        quantity: 18400,
+        readiness: 74,
+        power: 9200,
+        level: 4,
+        exp: 780,
+        expRequired: 1600,
+        icon: 'infantry',
+      },
+      {
+        id: 'specialForces',
+        name: 'نیروهای ویژه',
+        description: 'واحدهای تخصصی عملیات ویژه',
+        quantity: 920,
+        readiness: 91,
+        power: 11800,
+        level: 3,
+        exp: 610,
+        expRequired: 1200,
+        icon: 'specialForces',
+      },
+      {
+        id: 'mechanized',
+        name: 'واحد مکانیزه',
+        description: 'نیروی متحرک و زرهی',
+        quantity: 2100,
+        readiness: 82,
+        power: 7400,
+        level: 2,
+        exp: 350,
+        expRequired: 800,
+        icon: 'mechanized',
+      },
+      {
+        id: 'sniper',
+        name: 'واحد تک‌تیرانداز',
+        description: 'عملیات دقیق علیه اهداف حساس',
+        quantity: 480,
+        readiness: 88,
+        power: 3900,
+        level: 2,
+        exp: 440,
+        expRequired: 800,
+        icon: 'sniper',
+      },
+    ],
   },
   {
-    id: "infantry",
-    name: "پیاده نظام",
-    icon: "account-group",
-    iconFamily: "MaterialCommunityIcons",
+    id: 'cyber',
+    name: 'سایبری و اطلاعاتی',
+    icon: { library: 'mci', name: 'laptop' },
+    equipment: [
+      {
+        id: 'cyber',
+        name: 'مرکز عملیات سایبری',
+        description: 'دفاع و عملیات در فضای سایبری',
+        quantity: 12,
+        readiness: 93,
+        power: 13200,
+        level: 4,
+        exp: 920,
+        expRequired: 1800,
+        icon: 'cyber',
+      },
+      {
+        id: 'server',
+        name: 'مرکز پردازش اطلاعات',
+        description: 'پردازش داده‌های استراتژیک',
+        quantity: 24,
+        readiness: 89,
+        power: 8100,
+        level: 3,
+        exp: 540,
+        expRequired: 1200,
+        icon: 'server',
+      },
+      {
+        id: 'intel',
+        name: 'سامانه اطلاعاتی',
+        description: 'جمع‌آوری و تحلیل اطلاعات',
+        quantity: 17,
+        readiness: 86,
+        power: 7600,
+        level: 3,
+        exp: 460,
+        expRequired: 1200,
+        icon: 'intel',
+      },
+      {
+        id: 'signal',
+        name: 'مرکز سیگنال',
+        description: 'رهگیری و تحلیل ارتباطات',
+        quantity: 9,
+        readiness: 81,
+        power: 6300,
+        level: 2,
+        exp: 290,
+        expRequired: 800,
+        icon: 'signal',
+      },
+    ],
   },
   {
-    id: "cyber",
-    name: "تجهیزات سایبری و جاسوسی",
-    icon: "radar",
-    iconFamily: "MaterialCommunityIcons",
+    id: 'special',
+    name: 'تسلیحات ویژه',
+    icon: { library: 'mci', name: 'atom' },
+    equipment: [
+      {
+        id: 'specialWeapon',
+        name: 'سامانه راهبردی ویژه',
+        description: 'تجهیزات راهبردی با قدرت بسیار بالا',
+        quantity: 4,
+        readiness: 72,
+        power: 24500,
+        level: 2,
+        exp: 340,
+        expRequired: 1000,
+        icon: 'specialWeapon',
+      },
+      {
+        id: 'laser',
+        name: 'سامانه لیزری',
+        description: 'رهگیری و مقابله با اهداف سریع',
+        quantity: 7,
+        readiness: 84,
+        power: 11200,
+        level: 2,
+        exp: 510,
+        expRequired: 900,
+        icon: 'laser',
+      },
+      {
+        id: 'emp',
+        name: 'سامانه اختلال الکترومغناطیسی',
+        description: 'اختلال در سامانه‌های الکترونیکی',
+        quantity: 6,
+        readiness: 78,
+        power: 9800,
+        level: 2,
+        exp: 310,
+        expRequired: 800,
+        icon: 'emp',
+      },
+      {
+        id: 'command',
+        name: 'سامانه فرماندهی راهبردی',
+        description: 'هماهنگی عملیات راهبردی کشور',
+        quantity: 3,
+        readiness: 96,
+        power: 15700,
+        level: 3,
+        exp: 670,
+        expRequired: 1400,
+        icon: 'command',
+      },
+    ],
   },
   {
-    id: "biological",
-    name: "تسلیحات بیولوژیکی",
-    icon: "biohazard",
-    iconFamily: "MaterialCommunityIcons",
-  },
-  {
-    id: "riot",
-    name: "کنترل شورش و رضایت مردم",
-    icon: "account-supervisor",
-    iconFamily: "MaterialCommunityIcons",
-  },
-  {
-    id: "special",
-    name: "شاپ ویژه",
-    icon: "star-four-points",
-    iconFamily: "MaterialCommunityIcons",
+    id: 'logistics',
+    name: 'پشتیبانی و لجستیک',
+    icon: { library: 'mci', name: 'truck-fast' },
+    equipment: [
+      {
+        id: 'fuel',
+        name: 'تانکر سوخت‌رسان',
+        description: 'تأمین سوخت یگان‌های عملیاتی',
+        quantity: 86,
+        readiness: 88,
+        power: 3100,
+        level: 3,
+        exp: 470,
+        expRequired: 1000,
+        icon: 'fuel',
+      },
+      {
+        id: 'transport',
+        name: 'ناوگان حمل‌ونقل',
+        description: 'انتقال سریع نیرو و تجهیزات',
+        quantity: 340,
+        readiness: 83,
+        power: 4200,
+        level: 3,
+        exp: 520,
+        expRequired: 1100,
+        icon: 'transport',
+      },
+      {
+        id: 'repair',
+        name: 'واحد تعمیرات',
+        description: 'تعمیر و آماده‌سازی تجهیزات',
+        quantity: 48,
+        readiness: 91,
+        power: 5100,
+        level: 2,
+        exp: 390,
+        expRequired: 800,
+        icon: 'repair',
+      },
+      {
+        id: 'warehouse',
+        name: 'انبار استراتژیک',
+        description: 'ذخیره تجهیزات و قطعات یدکی',
+        quantity: 22,
+        readiness: 96,
+        power: 2800,
+        level: 3,
+        exp: 610,
+        expRequired: 1000,
+        icon: 'warehouse',
+      },
+    ],
   },
 ];
 
-const shopItems: Record<string, ShopItem[]> = {
-  income: [
-    {
-      id: "income-1",
-      name: "پالایشگاه نفت",
-      description: "افزایش درآمد نفتی کشور",
-      cost: 2500000,
-      benefit: "+85,000 / روز",
-      icon: "factory",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "income-2",
-      name: "نیروگاه",
-      description: "افزایش ظرفیت تولید انرژی کشور",
-      cost: 1800000,
-      benefit: "+60,000 / روز",
-      icon: "flash",
-      iconFamily: "Ionicons",
-    },
-    {
-      id: "income-3",
-      name: "معدن فلزات",
-      description: "استخراج و فروش فلزات ارزشمند",
-      cost: 2200000,
-      benefit: "+70,000 / روز",
-      icon: "cube-outline",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "income-4",
-      name: "مزرعه کشاورزی",
-      description: "تولید محصولات کشاورزی",
-      cost: 1200000,
-      benefit: "+40,000 / روز",
-      icon: "leaf",
-      iconFamily: "Ionicons",
-    },
-    {
-      id: "income-5",
-      name: "مرکز تجارت",
-      description: "افزایش درآمد از تجارت داخلی",
-      cost: 3000000,
-      benefit: "+100,000 / روز",
-      icon: "domain",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "income-6",
-      name: "صنعت گردشگری",
-      description: "جذب گردشگر و افزایش درآمد ارزی",
-      cost: 2800000,
-      benefit: "+90,000 / روز",
-      icon: "city-variant-outline",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "income-7",
-      name: "شرکت مخابرات",
-      description: "ارائه خدمات ارتباطی و اینترنت",
-      cost: 2000000,
-      benefit: "+75,000 / روز",
-      icon: "wifi",
-      iconFamily: "Ionicons",
-    },
-  ],
-
-  missiles: [
-    {
-      id: "missile-1",
-      name: "موشک بالستیک",
-      description: "افزایش قدرت تهاجمی دوربرد",
-      cost: 4200000,
-      benefit: "+12 قدرت تهاجمی",
-      icon: "rocket-launch",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "missile-2",
-      name: "موشک کروز",
-      description: "سامانه حمله دقیق برد متوسط",
-      cost: 3200000,
-      benefit: "+8 قدرت تهاجمی",
-      icon: "rocket",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "missile-3",
-      name: "موشک هایپرسونیک",
-      description: "فناوری پیشرفته حمله سریع",
-      cost: 8500000,
-      benefit: "+25 قدرت تهاجمی",
-      icon: "rocket-launch-outline",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "missile-4",
-      name: "مرکز کنترل موشکی",
-      description: "افزایش کنترل و دقت موشک ها",
-      cost: 5000000,
-      benefit: "+15 دقت",
-      icon: "target",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-
-  aircraft: [
-    {
-      id: "aircraft-1",
-      name: "جنگنده نسل چهارم",
-      description: "جنگنده چندمنظوره عملیاتی",
-      cost: 6500000,
-      benefit: "+15 قدرت هوایی",
-      icon: "airplane",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "aircraft-2",
-      name: "جنگنده نسل پنجم",
-      description: "جنگنده پیشرفته با قابلیت پنهان کاری",
-      cost: 12000000,
-      benefit: "+30 قدرت هوایی",
-      icon: "airplane-takeoff",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "aircraft-3",
-      name: "پهپاد شناسایی",
-      description: "افزایش توان شناسایی هوایی",
-      cost: 2400000,
-      benefit: "+10 شناسایی",
-      icon: "drone",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "aircraft-4",
-      name: "پایگاه هوایی",
-      description: "زیرساخت عملیاتی نیروی هوایی",
-      cost: 7500000,
-      benefit: "+20 ظرفیت هوایی",
-      icon: "airport",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-
-  navy: [
-    {
-      id: "navy-1",
-      name: "ناوچه رزمی",
-      description: "افزایش قدرت دریایی کشور",
-      cost: 5000000,
-      benefit: "+12 قدرت دریایی",
-      icon: "ferry",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "navy-2",
-      name: "ناوشکن",
-      description: "کشتی رزمی سنگین",
-      cost: 9500000,
-      benefit: "+25 قدرت دریایی",
-      icon: "ferry",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "navy-3",
-      name: "زیردریایی",
-      description: "افزایش توان عملیات زیرسطحی",
-      cost: 8200000,
-      benefit: "+20 قدرت دریایی",
-      icon: "submarine",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "navy-4",
-      name: "پایگاه دریایی",
-      description: "زیرساخت اصلی ناوگان",
-      cost: 6000000,
-      benefit: "+18 ظرفیت دریایی",
-      icon: "anchor",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-
-  defense: [
-    {
-      id: "defense-1",
-      name: "سامانه پدافندی کوتاه برد",
-      description: "دفاع در برابر تهدیدات هوایی",
-      cost: 3500000,
-      benefit: "+12 دفاع",
-      icon: "shield-check",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "defense-2",
-      name: "سامانه پدافندی دوربرد",
-      description: "پوشش دفاعی گسترده کشور",
-      cost: 8000000,
-      benefit: "+25 دفاع",
-      icon: "shield-star",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "defense-3",
-      name: "رادار پیشرفته",
-      description: "تشخیص زودهنگام تهدیدات",
-      cost: 4200000,
-      benefit: "+18 شناسایی",
-      icon: "radar",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-
-  ground: [
-    {
-      id: "ground-1",
-      name: "تانک اصلی میدان نبرد",
-      description: "افزایش قدرت نیروهای زمینی",
-      cost: 4300000,
-      benefit: "+14 قدرت زمینی",
-      icon: "tank",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "ground-2",
-      name: "خودروی زرهی",
-      description: "افزایش تحرک نیروهای زمینی",
-      cost: 2600000,
-      benefit: "+8 قدرت زمینی",
-      icon: "car",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "ground-3",
-      name: "توپخانه",
-      description: "پشتیبانی آتش نیروهای زمینی",
-      cost: 3800000,
-      benefit: "+11 قدرت زمینی",
-      icon: "target",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "ground-4",
-      name: "پایگاه زمینی",
-      description: "افزایش ظرفیت نیروهای زمینی",
-      cost: 5500000,
-      benefit: "+20 ظرفیت",
-      icon: "warehouse",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-
-  infantry: [
-    {
-      id: "infantry-1",
-      name: "نیروی پیاده حرفه ای",
-      description: "افزایش ظرفیت نیروهای نظامی",
-      cost: 1500000,
-      benefit: "+5,000 نیرو",
-      icon: "account-group",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "infantry-2",
-      name: "نیروی ویژه",
-      description: "واحدهای نخبه و آموزش دیده",
-      cost: 3800000,
-      benefit: "+12 قدرت",
-      icon: "account-star",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "infantry-3",
-      name: "مرکز آموزش نظامی",
-      description: "افزایش سرعت آموزش نیروها",
-      cost: 2800000,
-      benefit: "+20% آموزش",
-      icon: "school",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-
-  cyber: [
-    {
-      id: "cyber-1",
-      name: "مرکز فرماندهی سایبری",
-      description: "افزایش قدرت دفاع سایبری",
-      cost: 4800000,
-      benefit: "+15 سایبری",
-      icon: "server-security",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "cyber-2",
-      name: "شبکه جاسوسی",
-      description: "افزایش اطلاعات درباره رقبا",
-      cost: 5200000,
-      benefit: "+20 اطلاعات",
-      icon: "radar",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "cyber-3",
-      name: "هوش اطلاعاتی",
-      description: "تحلیل اطلاعات کشورهای دیگر",
-      cost: 6500000,
-      benefit: "+25 اطلاعات",
-      icon: "brain",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-
-  biological: [
-    {
-      id: "bio-1",
-      name: "آزمایشگاه تحقیقاتی",
-      description: "مرکز تحقیقات زیستی",
-      cost: 7000000,
-      benefit: "+15 فناوری",
-      icon: "biohazard",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "bio-2",
-      name: "مرکز تحقیقات پیشرفته",
-      description: "توسعه فناوری های زیستی",
-      cost: 9500000,
-      benefit: "+25 فناوری",
-      icon: "flask",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "bio-3",
-      name: "شبکه آزمایشگاهی",
-      description: "گسترش ظرفیت تحقیقات",
-      cost: 11000000,
-      benefit: "+30 فناوری",
-      icon: "microscope",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-
-  riot: [
-    {
-      id: "riot-1",
-      name: "مرکز مدیریت بحران",
-      description: "افزایش ثبات داخلی کشور",
-      cost: 2800000,
-      benefit: "+6% رضایت",
-      icon: "account-supervisor",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "riot-2",
-      name: "مرکز خدمات عمومی",
-      description: "بهبود خدمات عمومی کشور",
-      cost: 3500000,
-      benefit: "+8% رضایت",
-      icon: "city",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "riot-3",
-      name: "زیرساخت اجتماعی",
-      description: "افزایش رضایت و ثبات",
-      cost: 5000000,
-      benefit: "+12% رضایت",
-      icon: "account-heart",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-
-  special: [
-    {
-      id: "special-1",
-      name: "مرکز فرماندهی ویژه",
-      description: "افزایش کلی عملکرد کشور",
-      cost: 15000000,
-      benefit: "+10% عملکرد",
-      icon: "star-four-points",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "special-2",
-      name: "شبکه ماهواره ای",
-      description: "افزایش اطلاعات و ارتباطات",
-      cost: 18000000,
-      benefit: "+25% اطلاعات",
-      icon: "satellite-variant",
-      iconFamily: "MaterialCommunityIcons",
-    },
-    {
-      id: "special-3",
-      name: "ابرکامپیوتر ملی",
-      description: "افزایش قدرت تحلیل و تصمیم گیری",
-      cost: 22000000,
-      benefit: "+30% تحلیل",
-      icon: "desktop-classic",
-      iconFamily: "MaterialCommunityIcons",
-    },
-  ],
-};
-
-const { width } = Dimensions.get("window");
-const COLORS = {
-  black: "#000000",
-  panel: "#07100A",
-  panelLight: "#0A160D",
-  green: "#39FF14",
-  greenDark: "#103D0A",
-  border: "#174D12",
-  borderBright: "#2ACF13",
-  white: "#FFFFFF",
-  gray: "#777777",
-  grayLight: "#A1A1A1",
-  red: "#FF3B30",
-  yellow: "#DFFF00",
-};
-
-interface IconProps {
-  name: string;
+/* ICON COMPONENT */
+interface AppIconProps {
+  icon: string;
+  library?: IconLibrary;
   size?: number;
   color?: string;
-}
+};
 
-function AppIcon({ name, size = 24, color = COLORS.green }: IconProps) {
+const AppIcon = ({
+  icon,
+  library = 'mci',
+  size = 22,
+  color = COLORS.green,
+}: AppIconProps) => {
+  if (library === 'ion') {
+    return (
+      <Ionicons
+        name={icon as keyof typeof Ionicons.glyphMap}
+        size={size}
+        color={color}
+      />
+    );
+  }
+
   return (
     <MaterialCommunityIcons
-      name={name as any}
+      name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
       size={size}
       color={color}
     />
   );
-}
+};
 
+/* PAGE TITLE */
 const PageTitle = () => {
   return (
     <View style={styles.titleContainer}>
@@ -553,509 +757,376 @@ const PageTitle = () => {
   );
 };
 
+/* COUNTRY STATS */
 interface CountryStatsProps {
-  money: number;
-  satisfaction: number;
+  stats: CountryStats;
 }
 
-function CountryStats({
-  money,
-  satisfaction,
-}: CountryStatsProps) {
+const CountryStatsPanel = ({ stats }: CountryStatsProps) => {
   return (
-    <View style={styles.statsContainer}>
-      <View style={styles.stat}>
-        <View style={styles.statIcon}>
-          <Ionicons
-            name="wallet-outline"
-            size={22}
+    <View style={styles.statsPanel}>
+      <View style={styles.statItem}>
+        <View style={styles.statIconBox}>
+          <AppIcon
+            icon="cash-multiple"
+            size={25}
             color={COLORS.green}
           />
         </View>
 
-        <View style={styles.statTexts}>
-          <Text style={styles.statLabel}>پول</Text>
-
+        <View style={styles.statText}>
+          <Text style={styles.statLabel}>پول کشور</Text>
           <Text style={styles.statValue}>
-            {money.toLocaleString("en-US")}
+            {formatNumber(stats.money)}
           </Text>
         </View>
       </View>
 
-      <View style={styles.verticalDivider} />
+      <View style={styles.statDivider} />
 
-      <View style={styles.stat}>
-        <View style={styles.statIcon}>
-          <Ionicons
-            name="happy-outline"
-            size={23}
+      <View style={styles.statItem}>
+        <View style={styles.statIconBox}>
+          <AppIcon
+            icon="emoticon-happy-outline"
+            size={25}
             color={COLORS.green}
           />
         </View>
 
-        <View style={styles.statTexts}>
-          <Text style={styles.statLabel}>
-            رضایت مردم
-          </Text>
-
+        <View style={styles.statText}>
+          <Text style={styles.statLabel}>رضایت مردم</Text>
           <Text style={styles.statValue}>
-            {satisfaction}%
+            {stats.satisfaction}%
           </Text>
         </View>
       </View>
     </View>
   );
-}
+};
 
+/* CATEGORY SELECTOR */
 interface CategorySelectorProps {
-  categories: ShopCategory[];
   selectedId: string;
   onSelect: (id: string) => void;
-}
+};
 
-function CategorySelector({
-  categories,
-  selectedId,
-  onSelect,
-}: CategorySelectorProps) {
+const CategorySelector = ({selectedId, onSelect}: CategorySelectorProps) => {
+  const scrollRef = useRef<ScrollView>(null);
   return (
     <View style={styles.categoryWrapper}>
-      <View style={styles.categoryHeader}>
-        <Text style={styles.categoryHeaderText}>
-          دسته بندی تجهیزات
-        </Text>
-
-        <View style={styles.scrollHint}>
-          <Ionicons
-            name="chevron-back"
-            size={15}
-            color={COLORS.green}
-          />
-        </View>
-      </View>
-
-      <Animated.ScrollView
+      <ScrollView
+        ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryScroll}
-      >
-        {categories.map((category) => {
+        contentContainerStyle={styles.categoryContent}
+        directionalLockEnabled>
+        {shopCategories.map((category) => {
           const selected = category.id === selectedId;
 
           return (
-            <CategoryButton
+            <Pressable
               key={category.id}
-              category={category}
-              selected={selected}
               onPress={() => onSelect(category.id)}
-            />
+              style={({ pressed }) => [
+                styles.categoryTab,
+                selected && styles.categoryTabSelected,
+                pressed && styles.categoryPressed,
+              ]}>
+              <AppIcon
+                icon={category.icon.name}
+                library={category.icon.library}
+                size={18}
+                color={selected ? COLORS.green : COLORS.gray}/>
+
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.categoryText,
+                  selected && styles.categoryTextSelected,
+                ]}>
+                {category.name}
+              </Text>
+            </Pressable>
           );
         })}
-      </Animated.ScrollView>
+      </ScrollView>
     </View>
   );
-}
+};
 
-interface CategoryButtonProps {
-  category: ShopCategory;
-  selected: boolean;
-  onPress: () => void;
-}
+/* EQUIPMENT CARD */
+interface EquipmentCardProps {
+  item: Equipment;
+  onUpgrade: (id: string) => void;
+};
 
-function CategoryButton({
-  category,
-  selected,
-  onPress,
-}: CategoryButtonProps) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.spring(scale, {
-      toValue: selected ? 1.02 : 1,
-      useNativeDriver: true,
-      friction: 7,
-    }).start();
-  }, [selected, scale]);
-
-  return (
-    <Animated.View
-      style={[
-        styles.categoryAnimated,
-        { transform: [{ scale }] },
-      ]}
-    >
-      <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.categoryButton,
-          selected && styles.categoryButtonSelected,
-          pressed && styles.categoryPressed,
-        ]}
-      >
-        <AppIcon
-          name={category.icon}
-          size={18}
-          color={
-            selected
-              ? COLORS.green
-              : COLORS.gray
-          }
-        />
-
-        <Text
-          numberOfLines={1}
-          style={[
-            styles.categoryText,
-            selected && styles.categoryTextSelected,
-          ]}
-        >
-          {category.name}
-        </Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-interface ProductCardProps {
-  item: ShopItem;
-  money: number;
-  purchased: boolean;
-  onPurchase: (item: ShopItem) => void;
-}
-
-function ProductCard({
+const EquipmentCard = ({
   item,
-  money,
-  purchased,
-  onPurchase,
-}: ProductCardProps) {
-  const scale = useRef(new Animated.Value(1)).current;
+  onUpgrade,
+}: EquipmentCardProps) => {
+  const expPercent = Math.min(
+    100,
+    (item.exp / item.expRequired) * 100,
+  );
 
-  const canBuy = money >= item.cost && !purchased;
-
-  const pressIn = () => {
-    Animated.spring(scale, {
-      toValue: 0.98,
-      useNativeDriver: true,
-      friction: 8,
-    }).start();
-  };
-
-  const pressOut = () => {
-    Animated.spring(scale, {
-      toValue: 1,
-      useNativeDriver: true,
-      friction: 6,
-    }).start();
-  };
+  const icon = getEquipmentIcon(
+    item.icon as EquipmentIconName,
+  );
 
   return (
-    <Animated.View
-      style={[
-        styles.productCard,
-        { transform: [{ scale }] },
-      ]}
-    >
-      <View style={styles.productIconBox}>
-        <AppIcon
-          name={item.icon}
-          size={29}
-          color={
-            purchased
-              ? "#176E0B"
-              : COLORS.green
-          }
-        />
+    <View style={styles.equipmentCard}>
+      <View style={styles.equipmentTop}>
+        <View style={styles.equipmentIconBox}>
+          <AppIcon
+            icon={icon.name}
+            library={icon.library}
+            size={38}
+            color={COLORS.green}
+          />
+        </View>
 
-        <View style={styles.productCode}>
-          <Text style={styles.productCodeText}>
-            MCI
+        <View style={styles.equipmentInfo}>
+          <Text
+            style={styles.equipmentName}
+            numberOfLines={1}
+          >
+            {item.name}
+          </Text>
+
+          <Text
+            style={styles.equipmentDescription}
+            numberOfLines={2}
+          >
+            {item.description}
           </Text>
         </View>
       </View>
 
-      <View style={styles.productInfo}>
-        <Text
-          style={styles.productName}
-          numberOfLines={1}
-        >
-          {item.name}
-        </Text>
+      <View style={styles.equipmentStats}>
+        <View style={styles.miniStat}>
+          <Text style={styles.miniStatLabel}>تعداد بسته</Text>
+          <Text style={styles.miniStatValue}>
+            {formatNumber(item.quantity)}
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => onUpgrade(item.id)}
+          style={({ pressed }) => [
+            styles.upgradeButton,
+            pressed && styles.upgradeButtonPressed,
+          ]}>
+          <Text style={styles.upgradeText}>خرید</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+};
 
-        <Text
-          style={styles.productDescription}
-          numberOfLines={1}
-        >
-          {item.description}
-        </Text>
+/* EQUIPMENT LIST */
+interface EquipmentListProps {
+  category: EquipmentCategory;
+  equipment: Equipment[];
+  onUpgrade: (id: string) => void;
+};
 
-        <View style={styles.productStats}>
-          <View style={styles.productStat}>
-            <Text style={styles.productStatLabel}>
-              هزینه
-            </Text>
+const EquipmentList = ({
+  category,
+  equipment,
+  onUpgrade,
+}: EquipmentListProps) => {
+  return (
+    <View style={styles.equipmentColumn}>
+      <View style={styles.equipmentListHeader}>
+        <View style={styles.equipmentListTitle}>
+          <AppIcon
+            icon={category.icon.name}
+            library={category.icon.library}
+            size={20}
+          />
 
-            <Text style={styles.costText}>
-              {item.cost.toLocaleString("en-US")}
-            </Text>
-          </View>
+          <Text style={styles.equipmentListTitleText}>
+            {category.name}
+          </Text>
+        </View>
 
-          <View style={styles.productStat}>
-            <Text style={styles.productStatLabel}>
-              سود
-            </Text>
-
-            <Text style={styles.benefitText}>
-              {item.benefit}
-            </Text>
-          </View>
+        <View style={styles.listCounter}>
+          <Text style={styles.listCounterText}>
+            {equipment.length}/18
+          </Text>
         </View>
       </View>
 
-      <Pressable
-        disabled={!canBuy}
-        onPress={() => onPurchase(item)}
-        onPressIn={pressIn}
-        onPressOut={pressOut}
-        style={({ pressed }) => [
-          styles.buyButton,
-          purchased && styles.purchasedButton,
-          !canBuy && !purchased && styles.disabledButton,
-          pressed && styles.buyPressed,
-        ]}
-      >
-        <Ionicons
-          name={
-            purchased
-              ? "checkmark-circle-outline"
-              : "cart-outline"
-          }
-          size={17}
-          color={
-            purchased
-              ? "#1B6411"
-              : canBuy
-              ? COLORS.green
-              : COLORS.gray
-          }
-        />
-
-        <Text
-          style={[
-            styles.buyText,
-            purchased && styles.purchasedText,
-            !canBuy &&
-              !purchased &&
-              styles.disabledText,
-          ]}
-        >
-          {purchased ? "فعال" : "خرید"}
-        </Text>
-      </Pressable>
-    </Animated.View>
+      <FlatList
+        data={equipment}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <EquipmentCard
+            item={item}
+            onUpgrade={onUpgrade}
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.equipmentListContent}
+        ItemSeparatorComponent={() => (
+          <View style={styles.cardSeparator} />
+        )}
+      />
+    </View>
   );
-}
+};
 
-interface FeedbackProps {
-  message: string | null;
-  success: boolean;
-}
+/* MAIN SCREEN */
+export default function EquipmentManagementScreen() {
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
 
-function PurchaseFeedback({
-  message,
-  success,
-}: FeedbackProps) {
-  if (!message) {
-    return null;
-  }
+  const [selectedCategoryId, setSelectedCategoryId] =
+    useState('ground');
+
+  const [countryStats] =
+    useState<CountryStats>(initialCountryStats);
+
+  const [equipmentState, setEquipmentState] =
+    useState<Record<string, Equipment[]>>(
+      Object.fromEntries(
+        shopCategories.map((category) => [
+          category.id,
+          category.equipment,
+        ]),
+      ),
+    );
+
+  const selectedCategory = useMemo(
+    () =>
+      shopCategories.find(
+        (category) =>
+          category.id === selectedCategoryId,
+      ) ?? shopCategories[4],
+    [selectedCategoryId],
+  );
+
+  const currentEquipment =
+    equipmentState[selectedCategory.id] ?? [];
+
+  const isTabletOrLargePhone = width >= 720;
+
+  const handleUpgrade = (equipmentId: string) => {
+    setEquipmentState((previous) => {
+      const currentItems =
+        previous[selectedCategory.id] ?? [];
+
+      const updatedItems = currentItems.map((item) => {
+        if (item.id !== equipmentId) {
+          return item;
+        }
+
+        const newLevel = item.level + 1;
+        const newRequiredExp = Math.round(
+          item.expRequired * 1.35,
+        );
+
+        return {
+          ...item,
+          level: newLevel,
+          exp: 0,
+          expRequired: newRequiredExp,
+          power: Math.round(item.power * 1.12),
+          readiness: Math.min(
+            100,
+            item.readiness + 2,
+          ),
+        };
+      });
+
+      return {
+        ...previous,
+        [selectedCategory.id]: updatedItems,
+      };
+    });
+  };
 
   return (
-    <View
-      style={[
-        styles.feedback,
-        success
-          ? styles.feedbackSuccess
-          : styles.feedbackError,
-      ]}
-    >
-      <Ionicons
-        name={
-          success
-            ? "checkmark-circle"
-            : "alert-circle"
-        }
-        size={18}
-        color={
-          success
-            ? COLORS.green
-            : COLORS.red
-        }
-      />
-
-      <Text
+    <SafeAreaView style={styles.screen}>
+      <Header />
+      <SafeAreaView
         style={[
-          styles.feedbackText,
+          styles.safeArea,
           {
-            color: success
-              ? COLORS.green
-              : COLORS.red,
+            paddingTop: Math.max(insets.top, 8),
           },
         ]}
       >
-        {message}
-      </Text>
-    </View>
-  );
-}
-
-export default function ShopScreen() {
-  const insets = useSafeAreaInsets();
-  const [selectedCategory, setSelectedCategory] = useState("income");
-  const [money, setMoney] = useState(12450000);
-  const [satisfaction] = useState(72);
-  const [purchasedItems, setPurchasedItems] = useState<Set<string>>(new Set());
-  const [feedback, setFeedback] = useState<{
-    message: string | null;
-    success: boolean;
-  }>({
-    message: null,
-    success: false,
-  });
-
-  const products = useMemo(() => {
-    return shopItems[selectedCategory] ?? [];
-  }, [selectedCategory]);
-
-  useEffect(() => {
-    if (!feedback.message) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setFeedback({
-        message: null,
-        success: false,
-      });
-    }, 2200);
-
-    return () => clearTimeout(timer);
-  }, [feedback]);
-
-  const handlePurchase = useCallback(
-    (item: ShopItem) => {
-      if (purchasedItems.has(item.id)) {
-        return;
-      }
-
-      if (money < item.cost) {
-        setFeedback({
-          message: "موجودی کافی نیست",
-          success: false,
-        });
-
-        return;
-      }
-
-      setMoney((currentMoney) => {
-        return currentMoney - item.cost;
-      });
-
-      setPurchasedItems((previous) => {
-        const next = new Set(previous);
-        next.add(item.id);
-        return next;
-      });
-
-      setFeedback({
-        message: `${item.name} با موفقیت فعال شد`,
-        success: true,
-      });
-    },
-    [money, purchasedItems]
-  );
-
-  const renderProduct = useCallback(
-    ({ item }: { item: ShopItem }) => {
-      return (
-        <ProductCard
-          item={item}
-          money={money}
-          purchased={purchasedItems.has(item.id)}
-          onPurchase={handlePurchase}
-        />
-      );
-    },
-    [
-      money,
-      purchasedItems,
-      handlePurchase,
-    ]
-  );
-
-  const renderHeader = useCallback(() => {
-    return (
-      <View>
-        <PageTitle />
-        <CountryStats money={money} satisfaction={satisfaction}/>
-
-        <CategorySelector
-          categories={shopCategories}
-          selectedId={selectedCategory}
-          onSelect={setSelectedCategory}
-        />
-
-        <View style={styles.productsHeader}>
-          <View style={styles.productsHeaderLine} />
-
-          <Text style={styles.productsHeaderText}>
-            تجهیزات موجود
-          </Text>
-
-          <Text style={styles.productsCount}>
-            {products.length.toString().padStart(2, "0")}
-          </Text>
-        </View>
-      </View>
-    );
-  }, [
-    money,
-    satisfaction,
-    selectedCategory,
-    products.length,
-  ]);
-
-  return (
-    <View style={styles.screen}>
-      <Header />
-      <ScrollView
-        style={[styles.safeArea, {paddingTop: Math.max(insets.top - 8, 0)}]}>
-        <StatusBar barStyle="light-content" backgroundColor={COLORS.black}/>
-
         <View style={styles.container}>
           <FlatList
-            data={products}
-            keyExtractor={(item) => item.id}
-            renderItem={renderProduct}
-            ListHeaderComponent={renderHeader}
+            data={[]}
+            renderItem={null}
+            ListHeaderComponent={
+              <>
+                <PageTitle />
+
+                <CountryStatsPanel
+                  stats={countryStats}
+                />
+
+                <CategorySelector
+                  selectedId={selectedCategoryId}
+                  onSelect={setSelectedCategoryId}
+                />
+
+                {isTabletOrLargePhone ? (
+                  <View style={styles.twoColumnLayout}>
+                    <EquipmentList
+                      category={selectedCategory}
+                      equipment={currentEquipment}
+                      onUpgrade={handleUpgrade}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.singleColumnLayout}>
+                    <View style={styles.mobileEquipmentArea}>
+                      <EquipmentList
+                        category={selectedCategory}
+                        equipment={currentEquipment}
+                        onUpgrade={handleUpgrade}
+                      />
+                    </View>
+                  </View>
+                )}
+              </>
+            }
             showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={[styles.listContent, {paddingBottom: insets.bottom + 105}]}
-            extraData={{money, purchasedItems, selectedCategory,}}/>
-
-          <PurchaseFeedback message={feedback.message} success={feedback.success}/>
+            contentContainerStyle={[
+              styles.mainScrollContent,
+              {
+                paddingBottom: 110 + insets.bottom,
+              },
+            ]}/>
         </View>
-      </ScrollView>
+      </SafeAreaView>
       <Footer />
-    </View>
+    </SafeAreaView>
   );
-}
+};
 
+/* STYLES */
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: "#050807",
   },
 
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.black,
+  },
+
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.black,
+  },
+
+  /* TITLE */
   titleContainer: {
     minHeight: 82,
     paddingHorizontal: 14,
@@ -1112,379 +1183,642 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
 
-  statsContainer: {
-    minHeight: 88,
-    marginHorizontal: 13,
+  /* COUNTRY STATS */
+
+  statsPanel: {
+    marginHorizontal: 12,
+    minHeight: 100,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    backgroundColor: "rgba(7, 16, 10, 0.92)",
-
-    flexDirection: "row-reverse",
-    alignItems: "center",
+    borderColor: '#1C5517',
+    backgroundColor: '#061006',
+    flexDirection: 'row',
+    alignItems: 'center',
 
     shadowColor: COLORS.green,
-    shadowOpacity: 0.08,
-    shadowRadius: 13,
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    elevation: 4,
+    shadowOpacity: 0.1,
+    shadowRadius: 9,
+    elevation: 3,
   },
 
-  stat: {
+  statItem: {
     flex: 1,
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 9,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
   },
 
-  statIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: "#071A0A",
+  statIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 11,
+    backgroundColor: '#0A180A',
     borderWidth: 1,
-    borderColor: "#16550E",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: '#194B15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 9,
   },
 
-  statTexts: {
-    alignItems: "flex-end",
+  statText: {
+    minWidth: 0,
   },
 
   statLabel: {
     color: COLORS.grayLight,
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 12,
+    textAlign: 'right',
+    marginBottom: 4,
   },
 
   statValue: {
     color: COLORS.green,
-    fontSize: 18,
-    fontWeight: "900",
-    marginTop: 4,
+    fontSize: 19,
+    fontWeight: '900',
+    textAlign: 'right',
+    fontVariant: ['tabular-nums'],
   },
 
-  verticalDivider: {
+  statDivider: {
     width: 1,
-    height: "62%",
-    backgroundColor: "#16480F",
+    height: 55,
+    backgroundColor: '#21461D',
   },
+
+  /* CATEGORY */
 
   categoryWrapper: {
-    marginTop: 18,
+    height: 65,
+    marginTop: 10,
+    position: 'relative',
+    justifyContent: 'center',
   },
 
-  categoryHeader: {
-    flexDirection: "row-reverse",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    marginBottom: 8,
-  },
-
-  categoryHeaderText: {
-    color: "#8A9A8E",
-    fontSize: 11,
-    fontWeight: "700",
-  },
-
-  scrollHint: {
-    width: 27,
-    height: 27,
-    borderRadius: 8,
-    backgroundColor: "#071A0A",
-    borderWidth: 1,
-    borderColor: "#16480F",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  categoryScroll: {
-    paddingHorizontal: 13,
+  categoryContent: {
+    paddingHorizontal: 28,
     gap: 8,
-    paddingVertical: 3,
+    alignItems: 'center',
   },
 
-  categoryAnimated: {
-    shadowColor: COLORS.green,
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-  },
-
-  categoryButton: {
-    minHeight: 44,
-    maxWidth: width * 0.65,
-
-    paddingHorizontal: 12,
-
+  categoryTab: {
+    height: 43,
+    paddingHorizontal: 13,
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: "#18301C",
-
-    backgroundColor: "#060B07",
-
-    flexDirection: "row-reverse",
-    alignItems: "center",
+    borderColor: '#202920',
+    backgroundColor: '#050905',
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 7,
+    maxWidth: 190,
   },
 
-  categoryButtonSelected: {
-    backgroundColor: "#0A210D",
+  categoryTabSelected: {
     borderColor: COLORS.green,
+    backgroundColor: '#0B1D09',
+
     shadowColor: COLORS.green,
-    shadowOpacity: 0.35,
-    shadowRadius: 9,
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
     elevation: 4,
   },
 
   categoryPressed: {
     opacity: 0.7,
+    transform: [{ scale: 0.98 }],
   },
 
   categoryText: {
     color: COLORS.gray,
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: '700',
+    flexShrink: 1,
   },
 
   categoryTextSelected: {
     color: COLORS.green,
-    fontWeight: "800",
   },
 
-  productCard: {
-    minHeight: 118,
-    marginHorizontal: 13,
-    marginTop: 9,
-
-    padding: 11,
-
-    borderRadius: 14,
+  scrollArrowLeft: {
+    position: 'absolute',
+    left: 4,
+    zIndex: 5,
+    width: 25,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: '#071007',
     borderWidth: 1,
-    borderColor: "#123E0D",
-    backgroundColor: "#07100A",
+    borderColor: '#173E13',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
-    flexDirection: "row-reverse",
-    alignItems: "center",
+  scrollArrowRight: {
+    position: 'absolute',
+    right: 4,
+    zIndex: 5,
+    width: 25,
+    height: 42,
+    borderRadius: 8,
+    backgroundColor: '#071007',
+    borderWidth: 1,
+    borderColor: '#173E13',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  /* MAIN */
+
+  mainScrollContent: {
+    paddingTop: 4,
+  },
+
+  twoColumnLayout: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    gap: 12,
+    marginTop: 4,
+  },
+
+  summaryColumn: {
+    flex: 0.78,
+    minWidth: 290,
+  },
+
+  equipmentColumn: {
+    flex: 1.22,
+    minWidth: 0,
+    minHeight: 400,
+  },
+
+  singleColumnLayout: {
+    paddingHorizontal: 12,
+    marginTop: 4,
+  },
+
+  mobileEquipmentArea: {
+    marginTop: 8,
+  },
+
+  /* PANELS */
+
+  panel: {
+    backgroundColor: COLORS.panel,
+    borderWidth: 1,
+    borderColor: '#174A13',
+    borderRadius: 15,
+    padding: 13,
+    marginBottom: 10,
 
     shadowColor: COLORS.green,
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
     elevation: 2,
   },
 
-  productIconBox: {
-    width: 61,
-    height: 86,
-    borderRadius: 11,
-    backgroundColor: "#050A06",
-    borderWidth: 1,
-    borderColor: "#174D12",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
+  panelHeader: {
+    minHeight: 35,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#132A12',
+    paddingBottom: 9,
   },
 
-  productCode: {
-    position: "absolute",
-    bottom: 5,
-    left: 5,
-    right: 5,
-    alignItems: "center",
+  panelHeaderTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexShrink: 1,
   },
 
-  productCodeText: {
-    color: "#315B35",
-    fontSize: 7,
-    fontWeight: "900",
-    letterSpacing: 1,
+  panelHeaderIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 8,
+    backgroundColor: '#0B190B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
   },
 
-  productInfo: {
-    flex: 1,
-    minWidth: 0,
-    paddingHorizontal: 10,
-    alignItems: "flex-end",
-  },
-
-  productName: {
+  panelTitle: {
     color: COLORS.white,
     fontSize: 14,
-    fontWeight: "800",
-    textAlign: "right",
-    width: "100%",
+    fontWeight: '800',
+    flexShrink: 1,
   },
 
-  productDescription: {
-    color: "#68776C",
+  counterBadge: {
+    minWidth: 42,
+    height: 27,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#245B1C',
+    backgroundColor: '#091509',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  counterText: {
+    color: COLORS.green,
+    fontSize: 11,
+    fontWeight: '800',
+  },
+
+  /* POWER */
+
+  powerBox: {
+    minHeight: 76,
+    borderRadius: 11,
+    backgroundColor: '#091609',
+    borderWidth: 1,
+    borderColor: '#163C13',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    marginBottom: 13,
+  },
+
+  powerIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: '#0C210B',
+    borderWidth: 1,
+    borderColor: '#24611B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 11,
+  },
+
+  powerLabel: {
+    color: COLORS.grayLight,
+    fontSize: 11,
+    marginBottom: 3,
+  },
+
+  powerValue: {
+    color: COLORS.green,
+    fontSize: 23,
+    fontWeight: '900',
+    fontVariant: ['tabular-nums'],
+  },
+
+  readinessHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 7,
+  },
+
+  sectionLabel: {
+    color: COLORS.grayLight,
+    fontSize: 11,
+  },
+
+  sectionValue: {
+    color: COLORS.green,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
+  progressTrackLarge: {
+    height: 7,
+    backgroundColor: '#172017',
+    borderRadius: 5,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#263126',
+  },
+
+  progressFill: {
+    height: '100%',
+    backgroundColor: COLORS.green,
+    borderRadius: 5,
+  },
+
+  branchTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 15,
+    marginBottom: 4,
+  },
+
+  branchTitleText: {
+    color: '#7C857A',
+    fontSize: 10,
+    marginRight: 8,
+  },
+
+  branchTitleLine: {
+    height: 1,
+    backgroundColor: '#173417',
+    flex: 1,
+  },
+
+  /* READINESS */
+
+  readinessRow: {
+    minHeight: 37,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#111A11',
+  },
+
+  readinessIcon: {
+    width: 27,
+    alignItems: 'center',
+    marginRight: 6,
+  },
+
+  readinessLabel: {
+    color: '#B3BBB1',
+    fontSize: 10.5,
+    flex: 1,
+  },
+
+  readinessValue: {
+    color: COLORS.green,
+    fontSize: 11,
+    fontWeight: '800',
+    minWidth: 35,
+    textAlign: 'right',
+  },
+
+  /* PRODUCTION */
+
+  productionRow: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#111A11',
+  },
+
+  productionIcon: {
+    width: 30,
+    alignItems: 'center',
+    marginRight: 5,
+  },
+
+  productionLabel: {
+    color: COLORS.grayLight,
+    fontSize: 11,
+    flex: 1,
+  },
+
+  productionPositive: {
+    color: COLORS.green,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  productionNegative: {
+    color: COLORS.orange,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  /* EQUIPMENT LIST */
+
+  equipmentListHeader: {
+    height: 51,
+    borderWidth: 1,
+    borderColor: '#174A13',
+    borderRadius: 13,
+    backgroundColor: '#061006',
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
+  equipmentListTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 0,
+    flex: 1,
+  },
+
+  equipmentListTitleText: {
+    color: COLORS.white,
+    fontSize: 15,
+    fontWeight: '900',
+    marginLeft: 8,
+    flexShrink: 1,
+  },
+
+  listCounter: {
+    backgroundColor: '#0A190A',
+    borderWidth: 1,
+    borderColor: '#23551B',
+    borderRadius: 7,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    marginLeft: 8,
+  },
+
+  listCounterText: {
+    color: COLORS.green,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+
+  equipmentListContent: {
+    paddingBottom: 15,
+  },
+
+  cardSeparator: {
+    height: 8,
+  },
+
+  /* EQUIPMENT CARD */
+
+  equipmentCard: {
+    backgroundColor: '#071007',
+    borderWidth: 1,
+    borderColor: '#194B15',
+    borderRadius: 14,
+    padding: 11,
+
+    shadowColor: COLORS.green,
+    shadowOpacity: 0.07,
+    shadowRadius: 7,
+    elevation: 2,
+  },
+
+  equipmentTop: {
+    minHeight: 62,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  equipmentIconBox: {
+    width: 59,
+    height: 59,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#20591A',
+    backgroundColor: '#0A180A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+
+  equipmentInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  equipmentName: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '900',
+    textAlign: 'right',
+    marginBottom: 4,
+  },
+
+  equipmentDescription: {
+    color: '#707970',
     fontSize: 9.5,
-    marginTop: 4,
-    textAlign: "right",
-    width: "100%",
+    lineHeight: 15,
+    textAlign: 'right',
   },
 
-  productStats: {
-    width: "100%",
-    flexDirection: "row-reverse",
+  levelBox: {
+    width: 49,
+    minHeight: 48,
+    borderRadius: 9,
+    backgroundColor: '#0A160A',
+    borderWidth: 1,
+    borderColor: '#1A4016',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+
+  levelLabel: {
+    color: COLORS.gray,
+    fontSize: 8,
+    marginBottom: 2,
+  },
+
+  levelValue: {
+    color: COLORS.green,
+    fontSize: 12,
+    fontWeight: '900',
+  },
+
+  /* MINI STATS */
+
+  equipmentStats: {
+    flexDirection: 'row',
+    gap: 6,
     marginTop: 10,
-    gap: 15,
   },
 
-  productStat: {
-    alignItems: "flex-end",
+  miniStat: {
+    flex: 1,
+    minHeight: 43,
+    backgroundColor: '#0A140A',
+    borderWidth: 1,
+    borderColor: '#142A13',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 3,
   },
 
-  productStatLabel: {
-    color: "#4E5D52",
+  miniStatLabel: {
+    color: COLORS.gray,
+    fontSize: 8,
+    marginBottom: 3,
+  },
+
+  miniStatValue: {
+    color: COLORS.green,
+    fontSize: 10.5,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+  },
+
+  /* EXP / UPGRADE */
+
+  equipmentBottom: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 9,
+  },
+
+  expContainer: {
+    flex: 1,
+  },
+
+  expHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+
+  expText: {
+    color: COLORS.gray,
+    fontSize: 8,
+    fontWeight: '700',
+  },
+
+  expNumbers: {
+    color: '#8A9387',
     fontSize: 8,
   },
 
-  costText: {
-    color: "#D6DDD7",
-    fontSize: 10,
-    fontWeight: "700",
-    marginTop: 2,
+  expTrack: {
+    height: 6,
+    backgroundColor: '#182018',
+    borderRadius: 4,
+    overflow: 'hidden',
   },
 
-  benefitText: {
-    color: COLORS.green,
-    fontSize: 10,
-    fontWeight: "800",
-    marginTop: 2,
+  expFill: {
+    height: '100%',
+    backgroundColor: COLORS.green,
+    borderRadius: 4,
   },
 
-  buyButton: {
-    width: 65,
-    height: 42,
-    borderRadius: 10,
+  upgradeButton: {
+    height: 36,
+    minWidth: 75,
+    paddingHorizontal: 10,
+    borderRadius: 9,
     borderWidth: 1,
     borderColor: COLORS.green,
-    backgroundColor: "#071A0A",
-
-    alignItems: "center",
-    justifyContent: "center",
-
-    flexDirection: "row-reverse",
+    backgroundColor: '#071607',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 5,
+
+    shadowColor: COLORS.green,
+    shadowOpacity: 0.12,
+    shadowRadius: 5,
+    elevation: 2,
   },
 
-  purchasedButton: {
-    borderColor: "#175F0E",
-    backgroundColor: "#071009",
-  },
-
-  disabledButton: {
-    borderColor: "#263229",
-    backgroundColor: "#050806",
-  },
-
-  buyPressed: {
-    opacity: 0.65,
+  upgradeButtonPressed: {
+    backgroundColor: '#102910',
     transform: [{ scale: 0.96 }],
   },
 
-  buyText: {
-    color: COLORS.green,
-    fontSize: 11,
-    fontWeight: "900",
-  },
-
-  purchasedText: {
-    color: "#257B19",
-  },
-
-  disabledText: {
-    color: COLORS.gray,
-  },
-
-  feedback: {
-    position: "absolute",
-    left: 25,
-    right: 25,
-    bottom: 91,
-
-    minHeight: 45,
-
-    borderRadius: 12,
-    borderWidth: 1,
-
-    paddingHorizontal: 14,
-
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-
-    zIndex: 50,
-  },
-
-  feedbackSuccess: {
-    backgroundColor: "#061508",
-    borderColor: "#17640E",
-  },
-
-  feedbackError: {
-    backgroundColor: "#160606",
-    borderColor: "#63201D",
-  },
-
-  feedbackText: {
-    fontSize: 11,
-    fontWeight: "800",
-  },
-
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.black,
-  },
-
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.black,
-  },
-
-  listContent: {
-    paddingBottom: 110,
-  },
-
-  productsHeader: {
-    marginTop: 19,
-    marginHorizontal: 14,
-    marginBottom: 2,
-
-    flexDirection: "row-reverse",
-    alignItems: "center",
-    gap: 8,
-  },
-
-  productsHeaderLine: {
-    width: 3,
-    height: 18,
-    borderRadius: 3,
-    backgroundColor: COLORS.green,
-  },
-
-  productsHeaderText: {
-    flex: 1,
-    color: "#A2ADA5",
-    fontSize: 11,
-    fontWeight: "800",
-    textAlign: "right",
-  },
-
-  productsCount: {
+  upgradeText: {
     color: COLORS.green,
     fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 1,
-  },
+    fontWeight: '900',
+  }
 });

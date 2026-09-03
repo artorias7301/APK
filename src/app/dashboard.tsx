@@ -1,10 +1,11 @@
-import {View, Text, StyleSheet, ScrollView, Dimensions}from "react-native";
+import {View, Text, StyleSheet, ScrollView, Dimensions }from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 
 const { width } = Dimensions.get("window");
-const COLORS = {green: '#39FF14'};
+const COLORS = {green: "#00ff88"};
 const stats = [
   {
     title: "خزانه",
@@ -80,7 +81,7 @@ function StatCard({ item }: any) {
     <View style={styles.statCard}>
       <View style={styles.statTop}>
         <View style={styles.iconBox}>
-          <Ionicons name={item.icon} size={21} color='#39FF14' />
+          <Ionicons name={item.icon} size={21} color="#00ff88" />
         </View>
 
         <Text style={styles.statTitle}>{item.title}</Text>
@@ -160,7 +161,7 @@ const PageTitle = () => {
 
 export default function Dashbord() {
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       <Header/>
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -193,7 +194,7 @@ export default function Dashbord() {
               <Ionicons
                 name="shield-checkmark"
                 size={26}
-                color='#39FF14'
+                color="#00ff88"
               />
             </View>
           </View>
@@ -227,7 +228,7 @@ export default function Dashbord() {
               <Ionicons
                 name="arrow-up"
                 size={15}
-                color='#39FF14'
+                color="#00ff88"
               />
               <Text style={styles.growthText}>+14.8%</Text>
             </View>
@@ -254,7 +255,7 @@ export default function Dashbord() {
             <View key={index}
               style={[styles.event, index !== events.length - 1 && styles.eventBorder,]}>
               <View style={styles.eventIcon}>
-                <Ionicons name={event.icon} size={20} color='#39FF14'/>
+                <Ionicons name={event.icon} size={20} color="#00ff88"/>
               </View>
 
               <View style={styles.eventContent}>
@@ -276,7 +277,7 @@ export default function Dashbord() {
           <Ionicons
             name="radio"
             size={14}
-            color='#39FF14'
+            color="#00ff88"
           />
           <Text style={styles.footerText}>
             SYSTEM STATUS: STABLE
@@ -284,7 +285,7 @@ export default function Dashbord() {
         </View>
       </ScrollView>
       <Footer/>
-    </View>
+    </SafeAreaView>
   );
 }
 

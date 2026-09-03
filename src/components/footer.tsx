@@ -1,6 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { View, Pressable, Text, StyleSheet } from "react-native";
-import { Href, router } from "expo-router";
+import { Path_Handler } from './router';
+import { Href } from 'expo-router';
 
 type IconLibrary = 'ion' | 'mci';
 interface AppIconProps {
@@ -35,7 +36,7 @@ const AppIcon = ({
 };
 
 const COLORS = {
-  green: '#39FF14',
+  green: "#00ff88",
   gray: '#777777',
   black: '#000000'
 };
@@ -48,7 +49,6 @@ interface tabs {
 }
 
 export const Footer = () => {
-  const Path_Handler = (path: Href) => router.push(path);
   const tabs: tabs[] = [
     {
       label: 'ماموریت ها',
@@ -116,6 +116,7 @@ export const Footer = () => {
 const styles = StyleSheet.create({
   bottomNav: {
     minHeight: 65,
+    marginBottom: 10,
     marginHorizontal: 9,
     borderRadius: 16,
     borderWidth: 1,

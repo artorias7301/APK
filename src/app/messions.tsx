@@ -1,4 +1,5 @@
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Header } from '@/components/header';
@@ -166,7 +167,7 @@ function MissionCard({
         <MaterialCommunityIcons
           name={mission.icon}
           size={27}
-          color="#39FF14"
+          color='#00ff88'
         />
       </View>
 
@@ -188,7 +189,7 @@ function MissionCard({
         <MaterialCommunityIcons
           name="star-four-points"
           size={14}
-          color="#39FF14"
+          color='#00ff88'
         />
 
         <Text style={styles.rewardValue}>
@@ -246,7 +247,7 @@ const PageTitle = () => {
 /* MISSIONS SCREEN */
 export default function Missions() {
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen}>
       <Header />
       <ScrollView
         style={styles.scrollView}
@@ -287,12 +288,12 @@ export default function Missions() {
 
       </ScrollView>
       <Footer />
-    </View>
+    </SafeAreaView>
   );
 }
 
 /* STYLES */
-const COLORS = {green: '#39FF14'};
+const COLORS = {green: '#00ff88'};
 
 const styles = StyleSheet.create({
 
@@ -426,7 +427,7 @@ const styles = StyleSheet.create({
   },
 
   countText: {
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontSize: 10,
 
@@ -467,7 +468,7 @@ const styles = StyleSheet.create({
 
     paddingHorizontal: 10,
 
-    shadowColor: '#39FF14',
+    shadowColor: '#00ff88',
 
     shadowOpacity: 0.08,
 
@@ -540,7 +541,7 @@ const styles = StyleSheet.create({
   rewardValue: {
     marginTop: 1,
 
-    color: '#39FF14',
+    color: '#00ff88',
 
     fontSize: 15,
 
@@ -548,7 +549,7 @@ const styles = StyleSheet.create({
 
     textAlign: 'center',
 
-    textShadowColor: '#39FF14',
+    textShadowColor: '#00ff88',
 
     textShadowOffset: {
       width: 0,

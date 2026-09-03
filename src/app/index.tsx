@@ -1,4 +1,5 @@
 import { View, TextInput, Pressable, Image, StyleSheet } from "react-native"
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from "react";
 import { router } from "expo-router";
 
@@ -7,7 +8,7 @@ function handelLogin() {router.replace('/dashboard');};
 export default function LoginScreen() {
   const [focused, setFocused] = useState(false);
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
 
       <Image style={styles.titleImage}
         source={require('@/assets/images/LogTitle.webp')}
@@ -28,7 +29,7 @@ export default function LoginScreen() {
           resizeMode="contain" />
       </Pressable>
 
-    </View>
+    </SafeAreaView>
   );
 };
 
