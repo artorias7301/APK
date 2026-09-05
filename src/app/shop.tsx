@@ -909,6 +909,12 @@ const EquipmentCard = ({
             {formatNumber(item.quantity)}
           </Text>
         </View>
+        <View style={styles.miniStat}>
+          <Text style={styles.miniStatLabel}>هزینه</Text>
+          <Text style={styles.miniStatValue}>
+            wz{formatNumber(item.quantity)}
+          </Text>
+        </View>
         <Pressable
           onPress={() => onUpgrade(item.id)}
           style={({ pressed }) => [
@@ -1141,7 +1147,7 @@ const styles = StyleSheet.create({
   },
 
   pageTitle: {
-    color: COLORS.green,
+    color: COLORS.white,
     fontSize: 26,
     fontWeight: '900',
     textAlign: 'center',

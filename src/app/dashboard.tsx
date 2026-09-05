@@ -3,19 +3,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from "@expo/vector-icons";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { COLORS } from '@/APIs/Colors';
 
 const { width } = Dimensions.get("window");
-const COLORS = {green: "#00ff88"};
 const stats = [
   {
     title: "خزانه",
-    value: "₽ 2,450,000",
+    value: "wz 2,450,000",
     icon: "wallet",
-    color: COLORS.green,
+    color: COLORS.orange,
   },
   {
     title: "درآمد روزانه",
-    value: "₽ 125,000",
+    value: "wz 125,000",
     icon: "trending-up",
     color: COLORS.green,
   },
@@ -27,7 +27,7 @@ const stats = [
   },
   {
     title: "مالیات روزانه",
-    value: "₽ 84,500",
+    value: "wz 84,500",
     icon: "cash",
     color: COLORS.green,
   },
@@ -136,7 +136,6 @@ function MoneyChart() {
     </View>
   );
 }
-
 
 const PageTitle = () => {
   return (

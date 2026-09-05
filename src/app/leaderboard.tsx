@@ -4,8 +4,9 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { COLORS } from '@/APIs/Colors';
+import { Color } from 'expo-router';
 
-/* TYPES */
 type IconName = React.ComponentProps<
   typeof MaterialCommunityIcons
 >['name'];
@@ -29,10 +30,8 @@ interface RankingCategory {
   playerValue: string;
 }
 
-/* PLAYER */
 const playerCountry = 'ایران';
 
-/* RANKING DATA */
 const rankingCategories: RankingCategory[] = [
   {
     id: 'wealth',
@@ -599,11 +598,6 @@ const rankingCategories: RankingCategory[] = [
   },
 ];
 
-/* PAGE TITLE */
-const COLORS = {
-  green: '#00ff88',
-};
-
 const PageTitle = () => {
   return (
     <View style={styles.titleContainer}>
@@ -625,7 +619,6 @@ const PageTitle = () => {
   );
 };
 
-/* PLAYER RANK CARD */
 function PlayerRankCard() {
   return (
     <View style={styles.playerRankCard}>
@@ -633,7 +626,7 @@ function PlayerRankCard() {
         <MaterialCommunityIcons
           name="crown"
           size={29}
-          color='#00ff88'
+          color='#f5b942'
         />
       </View>
 
@@ -664,7 +657,6 @@ function PlayerRankCard() {
   );
 }
 
-/* RANKING CARD */
 interface RankingCardProps {
   category: RankingCategory;
 }
@@ -843,10 +835,6 @@ function RankingCard({
   );
 }
 
-/* =========================================================
-   SCREEN
-========================================================= */
-
 export default function LeaderBoard() {
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -893,7 +881,6 @@ export default function LeaderBoard() {
   );
 }
 
-/* STYLES */
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -911,10 +898,7 @@ const styles = StyleSheet.create({
     paddingBottom: 35,
   },
 
-  /* =======================================================
-     TITLE
-  ======================================================= */
-
+  /* TITLE */
   titleContainer: {
     minHeight: 82,
     paddingHorizontal: 14,
@@ -929,7 +913,7 @@ const styles = StyleSheet.create({
   },
 
   pageTitle: {
-    color: '#00ff88',
+    color: COLORS.white,
     fontSize: 26,
     fontWeight: '900',
     textAlign: 'center',
@@ -970,10 +954,6 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
     marginHorizontal: 8,
   },  
-
-  /* =======================================================
-     PLAYER RANK
-  ======================================================= */
 
   playerRankCard: {
     flexDirection: 'row',
@@ -1091,13 +1071,13 @@ const styles = StyleSheet.create({
   playerRankNumber: {
     marginTop: 1,
 
-    color: '#00ff88',
+    color: COLORS.white,
 
     fontSize: 25,
 
     fontWeight: '900',
 
-    textShadowColor: '#00ff88',
+    textShadowColor: COLORS.white,
 
     textShadowOffset: {
       width: 0,
@@ -1106,10 +1086,6 @@ const styles = StyleSheet.create({
 
     textShadowRadius: 5,
   },
-
-  /* =======================================================
-     GLOBAL STATUS
-  ======================================================= */
 
   globalStatus: {
     flexDirection: 'row',
@@ -1166,10 +1142,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
 
-  /* =======================================================
-     RANKING CARD
-  ======================================================= */
-
   rankingCard: {
     marginBottom: 12,
 
@@ -1196,10 +1168,6 @@ const styles = StyleSheet.create({
 
     elevation: 2,
   },
-
-  /* =======================================================
-     RANKING HEADER
-  ======================================================= */
 
   rankingHeader: {
     flexDirection: 'row',
@@ -1265,10 +1233,6 @@ const styles = StyleSheet.create({
     marginLeft: 7,
   },
 
-  /* =======================================================
-     RANK LIST
-  ======================================================= */
-
   rankList: {
     marginTop: 3,
   },
@@ -1301,10 +1265,6 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
 
-  /* =======================================================
-     RANK NUMBER
-  ======================================================= */
-
   rankNumberContainer: {
     width: 28,
 
@@ -1332,10 +1292,6 @@ const styles = StyleSheet.create({
   topRankText: {
     color: '#82937D',
   },
-
-  /* =======================================================
-     COUNTRY
-  ======================================================= */
 
   countryContainer: {
     flex: 1,
@@ -1395,10 +1351,6 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
 
-  /* =======================================================
-     VALUE
-  ======================================================= */
-
   valueContainer: {
     width: 88,
 
@@ -1432,10 +1384,6 @@ const styles = StyleSheet.create({
 
     textAlign: 'right',
   },
-
-  /* =======================================================
-     PLAYER POSITION
-  ======================================================= */
 
   playerPosition: {
     flexDirection: 'row',
@@ -1516,10 +1464,6 @@ const styles = StyleSheet.create({
 
     textAlign: 'right',
   },
-
-  /* =======================================================
-     BOTTOM SPACE
-  ======================================================= */
 
   bottomSpacing: {
     height: 45,

@@ -1,9 +1,11 @@
 import { useMemo, useRef, useState } from 'react';
 import { Dimensions, FlatList, ScrollView, Pressable, StyleSheet, Text, View, useWindowDimensions} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import {Ionicons,MaterialCommunityIcons} from '@expo/vector-icons';
+import { Ionicons,MaterialCommunityIcons } from '@expo/vector-icons';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
+import { COLORS } from '@/APIs/Colors';
+import { user_equipments } from '@/APIs/api';
 
 /* TYPES */
 type IconLibrary = 'ion' | 'mci';
@@ -17,11 +19,6 @@ interface Equipment {
   name: string;
   description: string;
   quantity: number;
-  readiness: number;
-  power: number;
-  level: number;
-  exp: number;
-  expRequired: number;
   icon: string;
 };
 
@@ -90,17 +87,6 @@ type EquipmentIconName =
   | 'repair'
   | 'warehouse'
   | 'logistics';
-
-/* CONSTANTS */
-const COLORS = {
-  black: '#000000',
-  panel: '#071007',
-  green: '#00ff88',
-  white: '#F5FFF3',
-  gray: '#777777',
-  grayLight: '#A0A0A0',
-  orange: '#FFB020',
-};
 
 const initialCountryStats: CountryStats = {
   money: 12450000,
@@ -185,520 +171,55 @@ const shopCategories: EquipmentCategory[] = [
     id: 'missiles',
     name: 'تسلیحات موشکی',
     icon: { library: 'mci', name: 'rocket-launch' },
-    equipment: [
-      {
-        id: 'ballistic',
-        name: 'موشک بالستیک',
-        description: 'موشک برد بلند با قدرت تخریب بالا',
-        quantity: 42,
-        readiness: 88,
-        power: 18400,
-        level: 3,
-        exp: 720,
-        expRequired: 1400,
-        icon: 'ballistic',
-      },
-      {
-        id: 'cruise',
-        name: 'موشک کروز',
-        description: 'حمله دقیق به اهداف استراتژیک',
-        quantity: 76,
-        readiness: 91,
-        power: 12600,
-        level: 3,
-        exp: 540,
-        expRequired: 1200,
-        icon: 'cruise',
-      },
-      {
-        id: 'tactical',
-        name: 'موشک تاکتیکی',
-        description: 'پشتیبانی سریع از نیروهای زمینی',
-        quantity: 128,
-        readiness: 84,
-        power: 8300,
-        level: 2,
-        exp: 390,
-        expRequired: 800,
-        icon: 'tactical',
-      },
-      {
-        id: 'launcher',
-        name: 'پرتابگر متحرک',
-        description: 'افزایش تحرک و انعطاف سامانه موشکی',
-        quantity: 36,
-        readiness: 79,
-        power: 7200,
-        level: 2,
-        exp: 280,
-        expRequired: 800,
-        icon: 'launcher',
-      },
-    ],
+    equipment: user_equipments.missiles,
   },
   {
     id: 'air',
     name: 'نیروی هوایی',
     icon: { library: 'mci', name: 'airplane' },
-    equipment: [
-      {
-        id: 'fighter',
-        name: 'جنگنده چندمنظوره',
-        description: 'جنگنده سریع برای عملیات هوایی',
-        quantity: 64,
-        readiness: 92,
-        power: 19400,
-        level: 4,
-        exp: 900,
-        expRequired: 1600,
-        icon: 'fighter',
-      },
-      {
-        id: 'bomber',
-        name: 'هواپیمای بمب‌افکن',
-        description: 'حمل مهمات سنگین در عملیات راهبردی',
-        quantity: 18,
-        readiness: 81,
-        power: 15200,
-        level: 3,
-        exp: 630,
-        expRequired: 1200,
-        icon: 'bomber',
-      },
-      {
-        id: 'drone',
-        name: 'پهپاد رزمی',
-        description: 'عملیات شناسایی و حمله بدون سرنشین',
-        quantity: 137,
-        readiness: 95,
-        power: 6800,
-        level: 3,
-        exp: 740,
-        expRequired: 1400,
-        icon: 'drone',
-      },
-      {
-        id: 'helicopter',
-        name: 'بالگرد تهاجمی',
-        description: 'پشتیبانی نزدیک از نیروهای زمینی',
-        quantity: 31,
-        readiness: 86,
-        power: 9100,
-        level: 2,
-        exp: 450,
-        expRequired: 800,
-        icon: 'helicopter',
-      },
-    ],
+    equipment: user_equipments.aircraft
   },
   {
     id: 'navy',
     name: 'ناوگان دریایی',
     icon: { library: 'mci', name: 'ferry' },
-    equipment: [
-      {
-        id: 'destroyer',
-        name: 'ناوشکن',
-        description: 'کشتی رزمی چندمنظوره',
-        quantity: 8,
-        readiness: 84,
-        power: 17200,
-        level: 3,
-        exp: 620,
-        expRequired: 1200,
-        icon: 'destroyer',
-      },
-      {
-        id: 'frigate',
-        name: 'ناوچه رزمی',
-        description: 'دفاع و گشت دریایی',
-        quantity: 17,
-        readiness: 89,
-        power: 8300,
-        level: 2,
-        exp: 360,
-        expRequired: 800,
-        icon: 'frigate',
-      },
-      {
-        id: 'submarine',
-        name: 'زیردریایی',
-        description: 'عملیات مخفیانه در عمق آب',
-        quantity: 6,
-        readiness: 76,
-        power: 14600,
-        level: 3,
-        exp: 410,
-        expRequired: 1200,
-        icon: 'submarine',
-      },
-      {
-        id: 'patrol',
-        name: 'شناور گشتی',
-        description: 'کنترل و حفاظت از آب‌های سرزمینی',
-        quantity: 29,
-        readiness: 94,
-        power: 3600,
-        level: 2,
-        exp: 510,
-        expRequired: 800,
-        icon: 'patrol',
-      },
-    ],
+    equipment: user_equipments.navy
   },
   {
     id: 'airDefense',
     name: 'پدافند هوایی',
     icon: { library: 'mci', name: 'shield-airplane' },
-    equipment: [
-      {
-        id: 'sam',
-        name: 'سامانه موشکی پدافند',
-        description: 'رهگیری اهداف هوایی دشمن',
-        quantity: 28,
-        readiness: 94,
-        power: 11900,
-        level: 3,
-        exp: 810,
-        expRequired: 1400,
-        icon: 'sam',
-      },
-      {
-        id: 'radar',
-        name: 'رادار برد بلند',
-        description: 'کشف اهداف هوایی در فواصل دور',
-        quantity: 14,
-        readiness: 91,
-        power: 7600,
-        level: 3,
-        exp: 560,
-        expRequired: 1200,
-        icon: 'radar',
-      },
-      {
-        id: 'interceptor',
-        name: 'سامانه رهگیر',
-        description: 'واکنش سریع به تهدیدات هوایی',
-        quantity: 19,
-        readiness: 87,
-        power: 9800,
-        level: 2,
-        exp: 390,
-        expRequired: 800,
-        icon: 'interceptor',
-      },
-      {
-        id: 'antiDrone',
-        name: 'ضد پهپاد',
-        description: 'شناسایی و انهدام پهپادها',
-        quantity: 46,
-        readiness: 93,
-        power: 4200,
-        level: 2,
-        exp: 510,
-        expRequired: 800,
-        icon: 'antiDrone',
-      },
-    ],
+    equipment: user_equipments.airDefense
   },
   {
     id: 'ground',
     name: 'تجهیزات زمینی',
     icon: { library: 'mci', name: 'tank' },
-    equipment: [
-      {
-        id: 'tank',
-        name: 'تانک اصلی نبرد',
-        description: 'تانک سنگین با قدرت آتش و زره بالا',
-        quantity: 248,
-        readiness: 91,
-        power: 12400,
-        level: 3,
-        exp: 650,
-        expRequired: 1200,
-        icon: 'tank',
-      },
-      {
-        id: 'apc',
-        name: 'نفربر زرهی',
-        description: 'انتقال نیرو با حفاظت بالا',
-        quantity: 516,
-        readiness: 87,
-        power: 8200,
-        level: 2,
-        exp: 320,
-        expRequired: 800,
-        icon: 'apc',
-      },
-      {
-        id: 'artillery',
-        name: 'توپخانه خودکششی',
-        description: 'پشتیبانی آتش از فواصل دور',
-        quantity: 184,
-        readiness: 79,
-        power: 6750,
-        level: 2,
-        exp: 210,
-        expRequired: 800,
-        icon: 'artillery',
-      },
-      {
-        id: 'rocket',
-        name: 'سامانه راکت‌انداز',
-        description: 'حملات گسترده با راکت‌های چندگانه',
-        quantity: 96,
-        readiness: 76,
-        power: 5300,
-        level: 1,
-        exp: 120,
-        expRequired: 400,
-        icon: 'rocket',
-      },
-      {
-        id: 'antiTank',
-        name: 'سامانه ضد تانک',
-        description: 'مقابله با تانک‌های دشمن',
-        quantity: 132,
-        readiness: 83,
-        power: 4800,
-        level: 2,
-        exp: 410,
-        expRequired: 800,
-        icon: 'antiTank',
-      },
-      {
-        id: 'engineering',
-        name: 'خودرو مهندسی',
-        description: 'ساخت و تخریب موانع و استحکامات',
-        quantity: 64,
-        readiness: 68,
-        power: 2100,
-        level: 1,
-        exp: 80,
-        expRequired: 400,
-        icon: 'engineering',
-      },
-    ],
+    equipment: user_equipments.ground
   },
   {
     id: 'infantry',
     name: 'پیاده نظام',
     icon: { library: 'mci', name: 'account-group' },
-    equipment: [
-      {
-        id: 'infantry',
-        name: 'یگان پیاده نظام',
-        description: 'نیروی پایه عملیات زمینی',
-        quantity: 18400,
-        readiness: 74,
-        power: 9200,
-        level: 4,
-        exp: 780,
-        expRequired: 1600,
-        icon: 'infantry',
-      },
-      {
-        id: 'specialForces',
-        name: 'نیروهای ویژه',
-        description: 'واحدهای تخصصی عملیات ویژه',
-        quantity: 920,
-        readiness: 91,
-        power: 11800,
-        level: 3,
-        exp: 610,
-        expRequired: 1200,
-        icon: 'specialForces',
-      },
-      {
-        id: 'mechanized',
-        name: 'واحد مکانیزه',
-        description: 'نیروی متحرک و زرهی',
-        quantity: 2100,
-        readiness: 82,
-        power: 7400,
-        level: 2,
-        exp: 350,
-        expRequired: 800,
-        icon: 'mechanized',
-      },
-      {
-        id: 'sniper',
-        name: 'واحد تک‌تیرانداز',
-        description: 'عملیات دقیق علیه اهداف حساس',
-        quantity: 480,
-        readiness: 88,
-        power: 3900,
-        level: 2,
-        exp: 440,
-        expRequired: 800,
-        icon: 'sniper',
-      },
-    ],
+    equipment: user_equipments.infantry
   },
   {
     id: 'cyber',
     name: 'سایبری و اطلاعاتی',
     icon: { library: 'mci', name: 'laptop' },
-    equipment: [
-      {
-        id: 'cyber',
-        name: 'مرکز عملیات سایبری',
-        description: 'دفاع و عملیات در فضای سایبری',
-        quantity: 12,
-        readiness: 93,
-        power: 13200,
-        level: 4,
-        exp: 920,
-        expRequired: 1800,
-        icon: 'cyber',
-      },
-      {
-        id: 'server',
-        name: 'مرکز پردازش اطلاعات',
-        description: 'پردازش داده‌های استراتژیک',
-        quantity: 24,
-        readiness: 89,
-        power: 8100,
-        level: 3,
-        exp: 540,
-        expRequired: 1200,
-        icon: 'server',
-      },
-      {
-        id: 'intel',
-        name: 'سامانه اطلاعاتی',
-        description: 'جمع‌آوری و تحلیل اطلاعات',
-        quantity: 17,
-        readiness: 86,
-        power: 7600,
-        level: 3,
-        exp: 460,
-        expRequired: 1200,
-        icon: 'intel',
-      },
-      {
-        id: 'signal',
-        name: 'مرکز سیگنال',
-        description: 'رهگیری و تحلیل ارتباطات',
-        quantity: 9,
-        readiness: 81,
-        power: 6300,
-        level: 2,
-        exp: 290,
-        expRequired: 800,
-        icon: 'signal',
-      },
-    ],
+    equipment: user_equipments.cyber
   },
   {
     id: 'special',
     name: 'تسلیحات ویژه',
     icon: { library: 'mci', name: 'atom' },
-    equipment: [
-      {
-        id: 'specialWeapon',
-        name: 'سامانه راهبردی ویژه',
-        description: 'تجهیزات راهبردی با قدرت بسیار بالا',
-        quantity: 4,
-        readiness: 72,
-        power: 24500,
-        level: 2,
-        exp: 340,
-        expRequired: 1000,
-        icon: 'specialWeapon',
-      },
-      {
-        id: 'laser',
-        name: 'سامانه لیزری',
-        description: 'رهگیری و مقابله با اهداف سریع',
-        quantity: 7,
-        readiness: 84,
-        power: 11200,
-        level: 2,
-        exp: 510,
-        expRequired: 900,
-        icon: 'laser',
-      },
-      {
-        id: 'emp',
-        name: 'سامانه اختلال الکترومغناطیسی',
-        description: 'اختلال در سامانه‌های الکترونیکی',
-        quantity: 6,
-        readiness: 78,
-        power: 9800,
-        level: 2,
-        exp: 310,
-        expRequired: 800,
-        icon: 'emp',
-      },
-      {
-        id: 'command',
-        name: 'سامانه فرماندهی راهبردی',
-        description: 'هماهنگی عملیات راهبردی کشور',
-        quantity: 3,
-        readiness: 96,
-        power: 15700,
-        level: 3,
-        exp: 670,
-        expRequired: 1400,
-        icon: 'command',
-      },
-    ],
+    equipment: user_equipments.special
   },
   {
     id: 'logistics',
     name: 'پشتیبانی و لجستیک',
     icon: { library: 'mci', name: 'truck-fast' },
-    equipment: [
-      {
-        id: 'fuel',
-        name: 'تانکر سوخت‌رسان',
-        description: 'تأمین سوخت یگان‌های عملیاتی',
-        quantity: 86,
-        readiness: 88,
-        power: 3100,
-        level: 3,
-        exp: 470,
-        expRequired: 1000,
-        icon: 'fuel',
-      },
-      {
-        id: 'transport',
-        name: 'ناوگان حمل‌ونقل',
-        description: 'انتقال سریع نیرو و تجهیزات',
-        quantity: 340,
-        readiness: 83,
-        power: 4200,
-        level: 3,
-        exp: 520,
-        expRequired: 1100,
-        icon: 'transport',
-      },
-      {
-        id: 'repair',
-        name: 'واحد تعمیرات',
-        description: 'تعمیر و آماده‌سازی تجهیزات',
-        quantity: 48,
-        readiness: 91,
-        power: 5100,
-        level: 2,
-        exp: 390,
-        expRequired: 800,
-        icon: 'repair',
-      },
-      {
-        id: 'warehouse',
-        name: 'انبار استراتژیک',
-        description: 'ذخیره تجهیزات و قطعات یدکی',
-        quantity: 22,
-        readiness: 96,
-        power: 2800,
-        level: 3,
-        exp: 610,
-        expRequired: 1000,
-        icon: 'warehouse',
-      },
-    ],
+    equipment: user_equipments.logistics
   },
 ];
 
@@ -770,13 +291,13 @@ const CountryStatsPanel = ({ stats }: CountryStatsProps) => {
           <AppIcon
             icon="cash-multiple"
             size={25}
-            color={COLORS.green}
+            color={COLORS.gold}
           />
         </View>
 
         <View style={styles.statText}>
           <Text style={styles.statLabel}>پول کشور</Text>
-          <Text style={styles.statValue}>
+          <Text style={styles.statmoney}>
             {formatNumber(stats.money)}
           </Text>
         </View>
@@ -789,7 +310,7 @@ const CountryStatsPanel = ({ stats }: CountryStatsProps) => {
           <AppIcon
             icon="emoticon-happy-outline"
             size={25}
-            color={COLORS.green}
+            color={COLORS.PeopleSatisfy}
           />
         </View>
 
@@ -855,24 +376,10 @@ const CategorySelector = ({selectedId, onSelect}: CategorySelectorProps) => {
 };
 
 /* EQUIPMENT CARD */
-interface EquipmentCardProps {
-  item: Equipment;
-  onUpgrade: (id: string) => void;
-};
+interface EquipmentCardProps {item: Equipment};
 
-const EquipmentCard = ({
-  item,
-  onUpgrade,
-}: EquipmentCardProps) => {
-  const expPercent = Math.min(
-    100,
-    (item.exp / item.expRequired) * 100,
-  );
-
-  const icon = getEquipmentIcon(
-    item.icon as EquipmentIconName,
-  );
-
+const EquipmentCard = ({item}: EquipmentCardProps) => {
+  const icon = getEquipmentIcon(item.icon as EquipmentIconName);
   return (
     <View style={styles.equipmentCard}>
       <View style={styles.equipmentTop}>
@@ -916,14 +423,9 @@ const EquipmentCard = ({
 interface EquipmentListProps {
   category: EquipmentCategory;
   equipment: Equipment[];
-  onUpgrade: (id: string) => void;
 };
 
-const EquipmentList = ({
-  category,
-  equipment,
-  onUpgrade,
-}: EquipmentListProps) => {
+const EquipmentList = ({ category, equipment }: EquipmentListProps) => {
   return (
     <View style={styles.equipmentColumn}>
       <View style={styles.equipmentListHeader}>
@@ -949,12 +451,7 @@ const EquipmentList = ({
       <FlatList
         data={equipment}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <EquipmentCard
-            item={item}
-            onUpgrade={onUpgrade}
-          />
-        )}
+        renderItem={({ item }) => (<EquipmentCard item={item}/>)}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.equipmentListContent}
         ItemSeparatorComponent={() => (
@@ -1000,41 +497,6 @@ export default function EquipmentManagementScreen() {
 
   const isTabletOrLargePhone = width >= 720;
 
-  const handleUpgrade = (equipmentId: string) => {
-    setEquipmentState((previous) => {
-      const currentItems =
-        previous[selectedCategory.id] ?? [];
-
-      const updatedItems = currentItems.map((item) => {
-        if (item.id !== equipmentId) {
-          return item;
-        }
-
-        const newLevel = item.level + 1;
-        const newRequiredExp = Math.round(
-          item.expRequired * 1.35,
-        );
-
-        return {
-          ...item,
-          level: newLevel,
-          exp: 0,
-          expRequired: newRequiredExp,
-          power: Math.round(item.power * 1.12),
-          readiness: Math.min(
-            100,
-            item.readiness + 2,
-          ),
-        };
-      });
-
-      return {
-        ...previous,
-        [selectedCategory.id]: updatedItems,
-      };
-    });
-  };
-
   return (
     <SafeAreaView style={styles.screen}>
       <Header />
@@ -1068,7 +530,6 @@ export default function EquipmentManagementScreen() {
                     <EquipmentList
                       category={selectedCategory}
                       equipment={currentEquipment}
-                      onUpgrade={handleUpgrade}
                     />
                   </View>
                 ) : (
@@ -1077,7 +538,6 @@ export default function EquipmentManagementScreen() {
                       <EquipmentList
                         category={selectedCategory}
                         equipment={currentEquipment}
-                        onUpgrade={handleUpgrade}
                       />
                     </View>
                   </View>
@@ -1131,7 +591,7 @@ const styles = StyleSheet.create({
   },
 
   pageTitle: {
-    color: COLORS.green,
+    color: COLORS.white,
     fontSize: 26,
     fontWeight: '900',
     textAlign: 'center',
@@ -1224,7 +684,15 @@ const styles = StyleSheet.create({
   },
 
   statValue: {
-    color: COLORS.green,
+    color: COLORS.PeopleSatisfy,
+    fontSize: 19,
+    fontWeight: '900',
+    textAlign: 'right',
+    fontVariant: ['tabular-nums'],
+  },
+
+  statmoney: {
+    color: COLORS.gold,
     fontSize: 19,
     fontWeight: '900',
     textAlign: 'right',
