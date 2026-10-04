@@ -25,8 +25,8 @@ const SYMBOLS: SymbolDef[] = [
   { icon: '🍊', weight: 20, pay: 8, pair: 1.5 },
   { icon: '🍇', weight: 12, pay: 12, pair: 2 },
   { icon: '🔔', weight: 7, pay: 30, pair: 3 },
-  { icon: '⭐', weight: 4, pay: 60, pair: 5 },
-  { icon: '💎', weight: 2, pay: 100, pair: 8 },
+  { icon: '⭐', weight: 4, pay: 40, pair: 5 },
+  { icon: '💎', weight: 3, pay: 100, pair: 8 },
 ];
 const TOTAL_WEIGHT = SYMBOLS.reduce((s, x) => s + x.weight, 0);
 
